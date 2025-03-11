@@ -1,21 +1,24 @@
-import { JsonSerializer } from "typescript-json-serializer";
+import { JsonSerializer, logError, throwError } from 'typescript-json-serializer';
 
-// Instantiate a custom serializer
+// Instantiate a default serializer
+const defaultSerializer = new JsonSerializer();
+
+// Or you can instantiate a serializer with your custom options
 const customSerializer = new JsonSerializer({
     // Throw errors instead of logging
-    // errorCallback: throwError,
+    errorCallback: logError,
 
     // Allow all nullish values
     nullishPolicy: {
-        undefined: 'remove',
-        null: 'remove'
+        undefined: 'allow',
+        null: 'allow'
     },
 
     // Disallow additional properties (non JsonProperty)
-    additionalPropertiesPolicy: 'disallow',
+    additionalPropertiesPolicy: 'allow',
 
     // e.g. if all the properties in the json object are prefixed by '_'
-    // formatPropertyName: (propertyName: string) => `_${propertyName}`,
-});
+    formatPropertyName: (propertyName: string) => `_${propertyName}`,
+})
 
-export { customSerializer };
+export { customSerializer, defaultSerializer };

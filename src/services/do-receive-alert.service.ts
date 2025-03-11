@@ -1,6 +1,11 @@
+import { customSerializer, defaultSerializer } from "../libs/customSerializer";
 import { Alert } from "../model/alert.model";
+import { DataFw } from "../model/data-fw.model";
+import { Hits } from "../model/hits.model";
 import { Response } from "../model/response.model";
+import { Win } from "../model/win.model";
 import { QueryWazuhService } from "./query-wazuh.service";
+import { plainToInstance } from "class-transformer";
 
 export async function doReceiveAlert (alert: Alert): Promise<Alert> {
   
@@ -23,18 +28,62 @@ export async function doReceiveAlert (alert: Alert): Promise<Alert> {
   */
   console.log(alert);
   // iterate over fields array
-  for (let i = 0; i < alert.attachments[0].fields.length; i++) {
+  for (let i = 0; i < alert.attachments![0].fields!.length; i++) {
        // get the title and value of each field
-       const title: string = alert.attachments[0].fields[i].title;
-       const value: string = alert.attachments[0].fields[i].value;
+       const title = alert.attachments![0].fields![i].title;
+       const value = alert.attachments![0].fields![i].value;
        // add the key-value pair to the alert object 
        console.log(title + " : " + value);
-    }
+  }
     // console.log(alert);
 
     // query Wazuh API
-    const response: Response = await QueryWazuhService(alert.attachments[0].ts);
-    // Save alert to database
+    // const resp = await QueryWazuhService(alert.attachments[0].ts);
+    const resp = await QueryWazuhService("1741206721.1499080785");
+    // const response: Response = resp.data;
+    // Deserialize response data into a User instance
+    parseWazuhResponse(resp);
 
-  return alert;
+    return alert;
+}
+
+export function parseKeyValueString<T>(input: string, clazz: { new (): T }): T {
+    const obj = input
+      .split(" ") // Split by space
+      .map(pair => pair.split("=")) // Split each pair by '='
+      .filter(([key, value]) => key && value !== undefined) // Ensure valid pairs
+      .reduce((acc, [key, value]) => {
+        acc[toCamelCase(key)] = value;
+        return acc;
+      }, {} as Record<string, string>);
+  
+    return Object.assign(new clazz() as object, obj) as T; // Assign properties to a new instance of clazz
+}
+
+function toCamelCase(input: string): string {
+    return input.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+export function parseWazuhResponse(resp: Response) {
+        // console.log("resp:");
+    // console.log(resp);
+    console.log("resp.data:");
+    console.log(resp.hits);
+
+    switch (resp.hits!.hits![0].source!.rule!.id) {
+        case "60115":
+            // Windows alert
+            const win = customSerializer.deserialize(resp.hits!.hits![0].source!.data!, Win);
+            console.log(win);
+            break;
+        case "70021":
+        case "70022":
+            // FW alert denied traffic
+            const dataFw = customSerializer.deserialize(resp.hits!.hits![0].source!.data!, DataFw);
+            console.log(dataFw);
+            break;
+        default:
+            break;
+    }
+
 }

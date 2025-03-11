@@ -7,24 +7,25 @@
 // These functions will throw an error if the JSON doesn't
 // match the expected interface, even if the JSON is valid.
 
-export interface Alert {
-    attachments: Attachment[];
+export class Alert {
+    attachments?: Attachment[];
 }
 
-export interface Attachment {
-    color:   string;
-    pretext: string;
-    title:   string;
-    text:    string;
-    fields:  Field[];
-    ts:      string;
+export class Attachment {
+    color?:   string;
+    pretext?: string;
+    title?:   string;
+    text?:    string;
+    fields?:  Field[];
+    ts?:      string;
 }
 
-export interface Field {
-    title: string;
-    value: string;
+export class Field {
+    title?: string;
+    value?: string;
 }
 
+/*
 // Converts JSON strings to/from your types
 // and asserts the results of JSON.parse at runtime
 export class Convert {
@@ -206,3 +207,4 @@ const typeMap: any = {
         { json: "value", js: "value", typ: "" },
     ], false),
 };
+*/

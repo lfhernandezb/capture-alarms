@@ -6,124 +6,25 @@
 //
 // These functions will throw an error if the JSON doesn't
 // match the expected interface, even if the JSON is valid.
+import { Expose, Transform, Exclude } from 'class-transformer';
+// import { JsonObject, JsonProperty } from "typescript-json-serializer";
+import { Shards } from "./shards.model";
+import { Hits } from "./hits.model";
 
-export interface Response {
-    took:     number;
-    timedOut: boolean;
-    shards:   Shards;
-    hits:     Hits;
+// @JsonObject()
+export class Response {
+    // @JsonProperty({ name: "took" })
+    took?:     number;
+    // @JsonProperty({ name: "timed_out" })
+    @Expose({ name: "timed_out" })
+    timedOut?: boolean;
+    // @JsonProperty({ name: "_shards", type: Shards })
+    @Expose({ name: "_shards" })
+    shards?:   Shards;
+    // @JsonProperty({ name: "hits" })
+    hits?:     Hits;
 }
-
-export interface Hits {
-    total:    Total;
-    maxScore: number;
-    hits:     Hit[];
-}
-
-export interface Hit {
-    index:  string;
-    id:     string;
-    score:  number;
-    source: Source;
-}
-
-export interface Source {
-    agent:           Agent;
-    manager:         Decoder;
-    data:            Data;
-    rule:            Rule;
-    decoder:         Decoder;
-    fullLog:         string;
-    input:           Input;
-    timestamp:       Date;
-    location:        string;
-    id:              string;
-    sourceTimestamp: string;
-}
-
-export interface Agent {
-    name: string;
-    id:   string;
-}
-
-export interface Data {
-    date?:              Date;
-    dstCountryCode?:    string;
-    timezone?:          string;
-    inInterface?:       string;
-    ipsPolicyID?:       string;
-    dstIP?:             string;
-    sentBytes?:         string;
-    srczonetype?:       string;
-    duration?:          string;
-    srcIP?:             string;
-    tranSrcIP?:         string;
-    protocol?:          string;
-    deviceName?:        string;
-    logType?:           string;
-    applicationRisk?:   string;
-    srcCountryCode?:    string;
-    tranDstPort?:       string;
-    recvPkts?:          string;
-    dstzonetype?:       string;
-    appfilterPolicyID?: string;
-    iap?:               string;
-    outInterface?:      string;
-    fwRuleID?:          string;
-    logID?:             string;
-    srcMAC?:            string;
-    sophosFwStatusMsg?: string;
-    sentPkts?:          string;
-    logComponent?:      string;
-    appresolvedby?:     string;
-    deviceID?:          string;
-    hbHealth?:          string;
-    logSubtype?:        string;
-    connevent?:         string;
-    priority?:          string;
-    srcPort?:           string;
-    srczone?:           string;
-    policyType?:        string;
-    tranSrcPort?:       string;
-    recvBytes?:         string;
-    th?:                string;
-    connid?:            string;
-    dstPort?:           string;
-    name?:              string;
-    dstzone?:           string;
-    time?:              string;
-    device?:            string;
-}
-
-export interface Decoder {
-    name: string;
-}
-
-export interface Input {
-    type: string;
-}
-
-export interface Rule {
-    firedtimes:  number;
-    mail:        boolean;
-    level:       number;
-    description: string;
-    groups:      string[];
-    id:          string;
-}
-
-export interface Total {
-    value:    number;
-    relation: string;
-}
-
-export interface Shards {
-    total:      number;
-    successful: number;
-    skipped:    number;
-    failed:     number;
-}
-
+/*
 // Converts JSON strings to/from your types
 // and asserts the results of JSON.parse at runtime
 export class Convert {
@@ -309,7 +210,7 @@ const typeMap: any = {
     "Source": o([
         { json: "agent", js: "agent", typ: r("Agent") },
         { json: "manager", js: "manager", typ: r("Decoder") },
-        { json: "data", js: "data", typ: r("Data") },
+        { json: "data", js: "data", typ: r("string") },
         { json: "rule", js: "rule", typ: r("Rule") },
         { json: "decoder", js: "decoder", typ: r("Decoder") },
         { json: "full_log", js: "fullLog", typ: "" },
@@ -371,6 +272,36 @@ const typeMap: any = {
         { json: "time", js: "time", typ: "" },
         { json: "device", js: "device", typ: "" },
     ], false),
+    "Win": o([
+        { json: "eventdata", js: "eventdata", typ: r("Eventdata") },
+        { json: "system", js: "system", typ: r("System") },
+    ], false),
+    "Eventdata": o([
+        { json: "subjectLogonId", js: "subjectLogonID", typ: "" },
+        { json: "targetUserName", js: "targetUserName", typ: "" },
+        { json: "subjectUserSid", js: "subjectUserSid", typ: "" },
+        { json: "subjectDomainName", js: "subjectDomainName", typ: "" },
+        { json: "targetSid", js: "targetSid", typ: "" },
+        { json: "subjectUserName", js: "subjectUserName", typ: "" },
+    ], false),
+    "System": o([
+        { json: "eventID", js: "eventID", typ: "" },
+        { json: "keywords", js: "keywords", typ: "" },
+        { json: "providerGuid", js: "providerGUID", typ: "" },
+        { json: "level", js: "level", typ: "" },
+        { json: "channel", js: "channel", typ: "" },
+        { json: "opcode", js: "opcode", typ: "" },
+        { json: "message", js: "message", typ: "" },
+        { json: "version", js: "version", typ: "" },
+        { json: "systemTime", js: "systemTime", typ: Date },
+        { json: "eventRecordID", js: "eventRecordID", typ: "" },
+        { json: "threadID", js: "threadID", typ: "" },
+        { json: "computer", js: "computer", typ: "" },
+        { json: "task", js: "task", typ: "" },
+        { json: "processID", js: "processID", typ: "" },
+        { json: "severityValue", js: "severityValue", typ: "" },
+        { json: "providerName", js: "providerName", typ: "" },
+    ], false),
     "Decoder": o([
         { json: "name", js: "name", typ: "" },
     ], false),
@@ -396,3 +327,4 @@ const typeMap: any = {
         { json: "failed", js: "failed", typ: 0 },
     ], false),
 };
+*/

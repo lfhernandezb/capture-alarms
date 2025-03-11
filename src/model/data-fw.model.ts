@@ -1,0 +1,40 @@
+import { JsonProperty } from "typescript-json-serializer";
+
+export class DataFw {
+    date?:              Date;
+    dstCountryCode?:    string;
+    timezone?:          string;
+    ipsPolicyId?:       string;
+    dstIP?:             string;
+    sentBytes?:         string;
+    duration?:          string;
+    srcIP?:             string;
+    protocol?:          string;
+    deviceName?:        string;
+    logType?:           string;
+    applicationRisk?:   string;
+    srcCountryCode?:    string;
+    tranDstPort?:       string;
+    recvPkts?:          string;
+    appfilterPolicyId?: string;
+    fwRuleId?:          string;
+    logId?:             string;
+    sophosFwStatusMsg?: string;
+    sentPkts?:          string;
+    logComponent?:      string;
+    appresolvedby?:     string;
+    deviceId?:          string;
+    hbHealth?:          string;
+    logSubtype?:        string;
+    message?:           string;
+    priority?:          string;
+    srcPort?:           string;
+    policyType?:        string;
+    tranSrcPort?:       string;
+    recvBytes?:         string;
+    th?:                string;
+    dstPort?:           string;
+    name?:              string;
+    time?:              string;
+    device?:            string;
+}

@@ -1,10 +1,11 @@
 import axios from "axios";
+import * as https from "https";
 import { Bool, Match, Must, Query, Request } from "../model/request.model";
 import { Response } from "../model/response.model";
-import { customSerializer } from "../libs/customSerializer";
+import { customSerializer, defaultSerializer } from "../libs/customSerializer";
 import { config } from "../config/config";
 
-async function QueryWazuhService(alertId: string): Promise<Response> {
+async function QueryWazuhService(alertId: string): Promise<any> {
   
     // create a new Match object
     const match: Match = new Match();
@@ -36,16 +37,22 @@ async function QueryWazuhService(alertId: string): Promise<Response> {
     // console.log(customSerializer.serialize(request));
   
     // return;
-  
+    /*
+    axios.interceptors.response.use((response) => {
+        response.data = defaultSerializer.deserialize(response.data, Response);
+        return response;
+      });
+    */
     // send an http request to the backend using axios
     return axios.post(config.wazuhUrl + "/wazuh-alerts-*/_search", customSerializer.serialize(request), {
         headers: {
             "Content-Type": "application/json"
         },
         auth: {
-            username: config.dbUser,
-            password: config.dbPassword
-        }
+            username: config.wazuhUser,
+            password: config.wazuhPassword
+        },
+        httpsAgent: new https.Agent({ rejectUnauthorized: false })
     });
   }
   
