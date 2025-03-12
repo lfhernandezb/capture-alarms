@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { plainToInstance } from "class-transformer";
 import { Alert } from "../model/alert.model";
 import { DataFw } from "../model/data-fw.model";
