@@ -1,4 +1,4 @@
-export interface System {
+export class System {
     eventID?:       string;
     keywords?:      string;
     providerGUID?:  string;
@@ -15,4 +15,9 @@ export interface System {
     processID?:     string;
     severityValue?: string;
     providerName?:  string;
+
+    // adicionales de rule.id 92650
+    eventSourceName?: string;
+    providerGuid?:    string;
+
 }

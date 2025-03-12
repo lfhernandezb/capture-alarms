@@ -1,5 +1,6 @@
 // import { JsonObject, JsonProperty } from "typescript-json-serializer";
-import { Expose } from "class-transformer";
+import "reflect-metadata";
+import { Expose, Type } from "class-transformer";
 import { Source } from "./source.model";
 
 // @JsonObject()
@@ -11,5 +12,6 @@ export class Hit {
     @Expose({ name: "_score" })
     score?:  number;
     @Expose({ name: "_source" })
+    @Type(() => Source)
     source?: Source;
 }

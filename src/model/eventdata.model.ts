@@ -5,4 +5,12 @@ export class Eventdata {
     subjectDomainName?: string;
     targetSid?:         string;
     subjectUserName?:   string;
+
+    // de rule.id 92650
+    serviceType?: string;
+    accountName?: string;
+    imagePath?:   string;
+    startType?:   string;
+    serviceName?: string;
+
 }

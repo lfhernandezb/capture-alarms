@@ -6,7 +6,7 @@
 //
 // These functions will throw an error if the JSON doesn't
 // match the expected interface, even if the JSON is valid.
-import { Expose, Transform, Exclude } from 'class-transformer';
+import { Expose, Transform, Exclude, Type } from 'class-transformer';
 // import { JsonObject, JsonProperty } from "typescript-json-serializer";
 import { Shards } from "./shards.model";
 import { Hits } from "./hits.model";
@@ -22,6 +22,7 @@ export class Response {
     @Expose({ name: "_shards" })
     shards?:   Shards;
     // @JsonProperty({ name: "hits" })
+    @Type(() => Hits)
     hits?:     Hits;
 }
 /*
