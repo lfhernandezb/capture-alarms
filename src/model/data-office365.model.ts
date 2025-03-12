@@ -23,6 +23,13 @@ export class FileData {
     fileSize?:      string;
 }
 
+// de rule-id 91700
+export class AppAccessContext {
+    ClientAppId?:   string;
+    ClientAppName?: string;
+    CorrelationId?: string;
+}
+
 export class Office365 {
     @Expose({ name: 'LastModifiedBy' })
     lastModifiedBy?:   string;
@@ -61,6 +68,49 @@ export class Office365 {
     @Type(() => FileData)
     @Expose({ name: 'FileData' })
     fileData?:         FileData;
+
+    // de rule.id 91700
+    Site?:                        string;
+    ListBaseType?:                string;
+    VirusVendor?:                 string;
+    Platform?:                    string;
+    UserKey?:                     string;
+    ItemType?:                    string;
+    IsManagedDevice?:             string;
+    DeviceDisplayName?:           string;
+    Operation?:                   string;
+    OrganizationId?:              string;
+    RecordType?:                  string;
+    ListId?:                      string;
+    Version?:                     string;
+    WebId?:                       string;
+    VirusInfo?:                   string;
+    UserAgent?:                   string;
+    CorrelationId?:               string;
+    Subscription?:                string;
+    ListItemUniqueId?:            string;
+    AuthenticationType?:          string;
+    EventSignature?:              string;
+    SourceFileName?:              string;
+    ApplicationDisplayName?:      string;
+    ObjectId?:                    string;
+    SiteUrl?:                     string;
+    @Type(() => AppAccessContext)
+    AppAccessContext?:            AppAccessContext;
+    ClientIP?:                    string;
+    ListServerTemplate?:          string;
+    SourceFileExtension?:         string;
+    Workload?:                    string;
+    SourceRelativeUrl?:           string;
+    EventSource?:                 string;
+    HighPriorityMediaProcessing?: string;
+    UserId?:                      string;
+    CreationTime?:                Date;
+    Id?:                          string;
+    GeoLocation?:                 string;
+    ApplicationId?:               string;
+    UserType?:                    string;
+
 }
 
 export class DataOffice365 {

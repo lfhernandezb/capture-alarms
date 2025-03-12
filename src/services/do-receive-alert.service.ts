@@ -1,11 +1,12 @@
-import { customSerializer, defaultSerializer } from "../libs/customSerializer";
+import { plainToInstance } from "class-transformer";
 import { Alert } from "../model/alert.model";
 import { DataFw } from "../model/data-fw.model";
+import { DataOffice365 } from "../model/data-office365.model";
 import { Hits } from "../model/hits.model";
 import { Response } from "../model/response.model";
 import { Win } from "../model/win.model";
 import { QueryWazuhService } from "./query-wazuh.service";
-import { plainToInstance } from "class-transformer";
+import { DataPkg } from "../model/data-pkg.model";
 
 export async function doReceiveAlert (alert: Alert): Promise<Alert> {
   
@@ -70,17 +71,56 @@ export function parseWazuhResponse(resp: Response) {
     console.log("resp.data:");
     console.log(resp.hits);
 
+    const source = resp.hits!.hits![0].source!;
+    console.log("source:");
+    const data = source.data;
+    //console.log(data);
+    const rule = source.rule;
+    //console.log("rule:");
+    const fullLog = source.fullLog;
+    //console.log("full_log:");
+
+    console.log("rule.id:" + rule!.id);
+    console.log("rule.description:" + rule!.description);
+    console.log("rule.level:" + rule!.level);
+
     switch (resp.hits!.hits![0].source!.rule!.id) {
         case "60115":
+        case "92650":
             // Windows alert
-            const win = customSerializer.deserialize(resp.hits!.hits![0].source!.data!, Win);
+            const win = plainToInstance(Win, JSON.parse(JSON.stringify(data)), {
+              excludeExtraneousValues: false,
+            });
             console.log(win);
             break;
         case "70021":
         case "70022":
-            // FW alert denied traffic
-            const dataFw = customSerializer.deserialize(resp.hits!.hits![0].source!.data!, DataFw);
+            // FW alert denied/permited traffic
+            const dataFw = plainToInstance(DataPkg, JSON.parse(JSON.stringify(data)), {
+              excludeExtraneousValues: false,
+            });
             console.log(dataFw);
+            break;
+        case "2903":
+            // Linux package
+            const dataPkg = plainToInstance(DataPkg, JSON.parse(JSON.stringify(data)), {
+              excludeExtraneousValues: false,
+            });
+            break;
+        case "31151":
+        case "1007":
+        case "3333":
+        case "31103":
+        case "31510":
+              // related to servers, web servers, services, full_log
+              console.log(fullLog);
+              break;
+        case "91575":
+            // office365
+            const dataOffice365 = plainToInstance(DataOffice365, JSON.parse(JSON.stringify(data)), {
+                        excludeExtraneousValues: false,
+                    });
+            console.log(dataOffice365);
             break;
         default:
             break;

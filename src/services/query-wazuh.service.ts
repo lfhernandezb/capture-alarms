@@ -1,8 +1,8 @@
+import { classToPlain, instanceToPlain } from "class-transformer";
 import axios from "axios";
 import * as https from "https";
 import { Bool, Match, Must, Query, Request } from "../model/request.model";
 import { Response } from "../model/response.model";
-import { customSerializer, defaultSerializer } from "../libs/customSerializer";
 import { config } from "../config/config";
 
 async function QueryWazuhService(alertId: string): Promise<any> {
@@ -44,7 +44,7 @@ async function QueryWazuhService(alertId: string): Promise<any> {
       });
     */
     // send an http request to the backend using axios
-    return axios.post(config.wazuhUrl + "/wazuh-alerts-*/_search", customSerializer.serialize(request), {
+    return axios.post(config.wazuhUrl + "/wazuh-alerts-*/_search", instanceToPlain(request, ), {
         headers: {
             "Content-Type": "application/json"
         },
