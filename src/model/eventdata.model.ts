@@ -13,4 +13,22 @@ export class Eventdata {
     startType?:   string;
     serviceName?: string;
 
+    // de rule.id 92657
+    subjectLogonId?:            string;
+    impersonationLevel?:        string;
+    ipAddress?:                 string;
+    authenticationPackageName?: string;
+    workstationName?:           string;
+    lmPackageName?:             string;
+    targetLogonId?:             string;
+    logonProcessName?:          string;
+    logonGuid?:                 string;
+    keyLength?:                 string;
+    processId?:                 string;
+    ipPort?:                    string;
+    targetDomainName?:          string;
+    targetUserSid?:             string;
+    logonType?:                 string;
+
+
 }

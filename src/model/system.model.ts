@@ -19,5 +19,4 @@ export class System {
     // adicionales de rule.id 92650
     eventSourceName?: string;
     providerGuid?:    string;
-
 }

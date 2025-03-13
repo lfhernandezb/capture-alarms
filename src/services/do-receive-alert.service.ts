@@ -8,6 +8,7 @@ import { Response } from "../model/response.model";
 import { Win } from "../model/win.model";
 import { QueryWazuhService } from "./query-wazuh.service";
 import { DataPkg } from "../model/data-pkg.model";
+import { DataWin } from '../model/data-win.model';
 
 export async function doReceiveAlert (alert: Alert): Promise<Alert> {
   
@@ -40,11 +41,10 @@ export async function doReceiveAlert (alert: Alert): Promise<Alert> {
     // console.log(alert);
 
     // query Wazuh API
-    // const resp = await QueryWazuhService(alert.attachments[0].ts);
-    const resp = await QueryWazuhService("1741206721.1499080785");
-    // const response: Response = resp.data;
-    // Deserialize response data into a User instance
-    parseWazuhResponse(resp);
+    const resp = await QueryWazuhService(alert.attachments![0].ts!);
+    // const resp = await QueryWazuhService("1741206721.1499080785");
+    const response: Response = resp.data;
+    parseWazuhResponse(response);
 
     return alert;
 }
@@ -67,13 +67,20 @@ function toCamelCase(input: string): string {
 }
 
 export function parseWazuhResponse(resp: Response) {
-        // console.log("resp:");
-    // console.log(resp);
-    console.log("resp.data:");
-    console.log(resp.hits);
+    console.log("resp:");
+    console.log(resp);
 
-    const source = resp.hits!.hits![0].source!;
-    console.log("source:");
+    const alert = plainToInstance(Response, JSON.parse(JSON.stringify(resp)), {
+      excludeExtraneousValues: false,
+    });
+
+    // console.log("alert:");
+    // console.log(alert);
+
+    const source = alert.hits!.hits![0].source!;
+    // console.log("source:");
+    const agent = source.agent;
+    // console.log("agent:");
     const data = source.data;
     //console.log(data);
     const rule = source.rule;
@@ -85,11 +92,19 @@ export function parseWazuhResponse(resp: Response) {
     console.log("rule.description:" + rule!.description);
     console.log("rule.level:" + rule!.level);
 
-    switch (resp.hits!.hits![0].source!.rule!.id) {
+    console.log("agent.id:" + agent!.id);
+    console.log("agent.name:" + agent!.name);
+    console.log("agent.ip:" + agent!.ip);
+    console.log("agent.os:" + agent!.os);
+    console.log("agent.status:" + agent!.status);
+    console.log("agent.version:" + agent!.version);
+    
+    switch (rule!.id) {
         case "60115":
         case "92650":
+        case "92657":
             // Windows alert
-            const win = plainToInstance(Win, JSON.parse(JSON.stringify(data)), {
+            const win = plainToInstance(DataWin, JSON.parse(JSON.stringify(data)), {
               excludeExtraneousValues: false,
             });
             console.log(win);
@@ -97,7 +112,7 @@ export function parseWazuhResponse(resp: Response) {
         case "70021":
         case "70022":
             // FW alert denied/permited traffic
-            const dataFw = plainToInstance(DataPkg, JSON.parse(JSON.stringify(data)), {
+            const dataFw = plainToInstance(DataFw, JSON.parse(JSON.stringify(data)), {
               excludeExtraneousValues: false,
             });
             console.log(dataFw);
@@ -113,6 +128,9 @@ export function parseWazuhResponse(resp: Response) {
         case "3333":
         case "31103":
         case "31510":
+        case "594":
+        case "750":
+        case "31516":
               // related to servers, web servers, services, full_log
               console.log(fullLog);
               break;
@@ -124,6 +142,7 @@ export function parseWazuhResponse(resp: Response) {
             console.log(dataOffice365);
             break;
         default:
+            console.log("******* No match, rule.id: " + rule!.id);
             break;
     }
 
