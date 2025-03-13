@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { receiveAlert, welcome } from "../controllers/home.controller";
+import { receiveWazuhAlert, receiveZabbixAlert, welcome } from "../controllers/home.controller";
 
 class HomeRoutes {
   router = Router();
@@ -10,7 +10,8 @@ class HomeRoutes {
 
   intializeRoutes() {
     this.router.get("/", welcome);
-    this.router.post("/alert", receiveAlert);
+    this.router.post("/alert/wazuh", receiveWazuhAlert);
+    this.router.post("/alert/zabbix", receiveZabbixAlert);
   }
 }
 
