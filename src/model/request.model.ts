@@ -6,7 +6,7 @@
 //
 // These functions will throw an error if the JSON doesn't
 // match the expected interface, even if the JSON is valid.
-
+/*
 export class Request {
     private query: Query;
 
@@ -85,5 +85,43 @@ export class Match {
 
     public setId(id: string): void {
         this.id = id;
+    }
+}
+*/
+
+// To parse this data:
+//
+//   import { Convert, Request } from "./file";
+//
+//   const request = Convert.toRequest(json);
+
+export interface Request {
+    query?: Query;
+}
+
+export interface Query {
+    bool?: Bool;
+}
+
+export interface Bool {
+    must?: Must[];
+}
+
+export interface Must {
+    match?: Match;
+}
+
+export interface Match {
+    id?: string;
+}
+
+// Converts JSON strings to/from your types
+export class Convert {
+    public static toRequest(json: string): Request {
+        return JSON.parse(json);
+    }
+
+    public static requestToJson(value: Request): string {
+        return JSON.stringify(value);
     }
 }

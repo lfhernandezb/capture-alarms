@@ -6,7 +6,7 @@ import { Response } from "../model/response.model";
 import { config } from "../config/config";
 
 async function QueryWazuhService(alertId: string): Promise<any> {
-  
+    /*
     // create a new Match object
     const match: Match = new Match();
     match.setId(alertId);
@@ -32,19 +32,26 @@ async function QueryWazuhService(alertId: string): Promise<any> {
     // create a new Request object
     const request: Request = new Request();
     request.setQuery(query);
-  
-  
-    // console.log(customSerializer.serialize(request));
-  
-    // return;
-    /*
-    axios.interceptors.response.use((response) => {
-        response.data = defaultSerializer.deserialize(response.data, Response);
-        return response;
-      });
     */
+    
+    const request: Request = {
+        query: {
+            bool: {
+                must: [
+                    {
+                        match: {
+                            id: alertId
+                        }
+                    }
+                ]
+                
+            }
+        }
+    };
+ 
     // send an http request to the backend using axios
-    return axios.post(config.wazuhUrl + "/wazuh-alerts-*/_search", instanceToPlain(request, ), {
+    return axios.post(config.wazuhUrl, instanceToPlain(request, ), {
+        timeout: config.timeout,
         headers: {
             "Content-Type": "application/json"
         },
