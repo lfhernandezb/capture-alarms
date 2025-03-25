@@ -58,8 +58,8 @@ const getConfig = (): EnvConfig => {
         wazuhUser: process.env.WAZUH_USER,
         wazuhPassword: process.env.WAZUH_PASSWORD,
         wazuhUrl: process.env.WAZUH_URL,
-        listeningPort: parseInt(process.env.PORT ? process.env.PORT : "8080", 10),
-        listeningAddress: process.env.LISTEN_ADDRESS ? process.env.LISTEN_ADDRESS : "localhost",
+        listeningPort: parseInt(process.env.LISTENING_PORT ? process.env.LISTENING_PORT : "8080", 10),
+        listeningAddress: process.env.LISTENING_ADDRESS ? process.env.LISTENING_ADDRESS : "localhost",
         corsOrigin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN : "http://localhost:8081",
         timeout: parseInt(process.env.TIMEOUT ? process.env.TIMEOUT : "4000", 10),
     };
