@@ -50,7 +50,7 @@ async function QueryWazuhService(alertId: string): Promise<any> {
     };
  
     // send an http request to the backend using axios
-    return axios.post(config.wazuhUrl, instanceToPlain(request, ), {
+    return axios.get(config.wazuhUrl, {
         timeout: config.timeout,
         headers: {
             "Content-Type": "application/json"
@@ -59,7 +59,8 @@ async function QueryWazuhService(alertId: string): Promise<any> {
             username: config.wazuhUser,
             password: config.wazuhPassword
         },
-        httpsAgent: new https.Agent({ rejectUnauthorized: false })
+        httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+        data: instanceToPlain(request, ) // data in body
     });
   }
   
