@@ -237,6 +237,60 @@ describe('doReceiveAlert', () => {
 
 
 
+    test('Correct parsing of alert 31516', () => {
+        const alertStr = `
+{"took":65,"timed_out":false,"_shards":{"total":255,"successful":255,"skipped":0,"failed":0},"hits":{"total":{"value":1,"relation":"eq"},"max_score":14.234955,"hits":[{"_index":"wazuh-alerts-4.x-2025.03.26","_id":"4x9n05UBVJrWq0ti9imS","_score":14.234955,"_source":{"agent":{"ip":"172.31.218.104","name":"molle","id":"020"},"manager":{"name":"wazuh"},"data":{"protocol":"GET","srcip":"127.0.0.1","id":"200","url":"/server-status?auto"},"rule":{"firedtimes":3,"mail":false,"level":6,"pci_dss":["6.5","11.4"],"tsc":["CC6.6","CC7.1","CC8.1","CC6.1","CC6.8","CC7.2","CC7.3"],"description":"Suspicious URL access.","groups":["web","appsec","attack"],"mitre":{"technique":["Process Injection"],"id":["T1055"],"tactic":["Defense Evasion","Privilege Escalation"]},"id":"31516","nist_800_53":["SA.11","SI.4"],"gdpr":["IV_35.7.d"]},"decoder":{"name":"web-accesslog"},"full_log":"127.0.0.1 - - [26/Mar/2025:14:02:38 -0300] \\"GET /server-status?auto HTTP/1.1\\" 200 1023 \\"-\\" \\"Zabbix 5.4.5\\"","input":{"type":"log"},"@timestamp":"2025-03-26T17:02:39.610Z","location":"/var/log/apache2/access.log","id":"1743008559.9692682312","timestamp":"2025-03-26T14:02:39.610-0300"}}]}}`;
+
+        // const alert = customSerializer.deserializeObject<Response>(alertStr70022, Response);
+        console.log(alertStr);
+        const alert = plainToInstance(Response, JSON.parse(alertStr), {
+                excludeExtraneousValues: false,
+              });
+        
+        // console.log(alertStr70022.replace(/\\\"/g, '\\\\"'));
+        // const alert = plainToInstance(Response, JSON.parse(alertStr70022));
+        console.log(alert);
+        expect(alert).not.toBeNull();
+        expect(alert!.took).toBe(65);
+        expect(alert!.timedOut).toBe(false);
+        expect(alert!.shards).not.toBeNull();
+        expect(alert!.shards!.total).toBe(255);
+        expect(alert!.shards!.successful).toBe(255);
+        expect(alert!.shards!.skipped).toBe(0);
+        expect(alert!.shards!.failed).toBe(0);
+        expect(alert!.hits).not.toBeNull();
+        expect(alert!.hits!.total).not.toBeNull();
+        expect(alert!.hits!.total!.value).toBe(1);
+        expect(alert!.hits!.total!.relation).toBe("eq");
+        expect(alert!.hits!.maxScore).toBe(14.234955);
+        expect(alert!.hits!.hits).not.toBeNull();
+        expect(alert!.hits!.hits).toHaveLength(1);
+        expect(alert!.hits!.hits![0]).not.toBeNull();
+        expect(alert!.hits!.hits![0].source).not.toBeNull();
+        expect(alert!.hits!.hits![0].source?.data).not.toBeNull();
+
+        // const dataFw = customSerializer.deserializeObject<DataFw>(hits.hits![0].source!.data!, DataFw);
+        // const dataFw = parseKeyValueString(alert.hits.hits![0].source!.data, DataFw);
+        // const dataFw = parseKeyValueString(hits.hits![0].source!.data!, DataFw);
+        console.log("hits[0]: \\n" + JSON.stringify(alert!.hits!.hits![0].source))
+
+        console.log("source: \\n" + JSON.stringify(alert!.hits!.hits![0].source))
+        
+        console.log("data: \\n" + JSON.stringify(alert!.hits!.hits![0].source!.data))
+
+        console.log("fullLog: \\n" + JSON.stringify(alert!.hits!.hits![0].source!.fullLog))
+
+        const dataWebSrv = plainToInstance(DataWebSrv, JSON.parse(JSON.stringify(alert!.hits!.hits![0].source!.data!)), {
+            excludeExtraneousValues: false,
+        });
+
+        console.log(dataWebSrv);
+        expect(dataWebSrv).not.toBeNull();
+        expect(dataWebSrv.protocol).toBe('GET');
+        expect(dataWebSrv.srcip).toBe('127.0.0.1');
+        expect(dataWebSrv.url).toBe('/server-status?auto');
+        expect(dataWebSrv.id).toBe('200');
+    });
 
 
 
