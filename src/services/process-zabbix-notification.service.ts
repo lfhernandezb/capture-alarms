@@ -1,6 +1,7 @@
 import { plainToInstance } from "class-transformer";
 import { ZabbixAnswer } from "../model/zabbix/zabbix-answer.model";
 import { queryEventById, queryHostByTriggerId } from "./zabbix.service";
+import { InfraEvent, zabbixSeverities } from "../model/infra-event.model";
 
 
   export async function processZabbixNotification(notification: string): Promise<string> {
@@ -50,8 +51,30 @@ import { queryEventById, queryHostByTriggerId } from "./zabbix.service";
       return input.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
   }
   
-  async function parseZabbixAnswer(zabbixAnswer: ZabbixAnswer): Promise<void> {
+  async function parseZabbixAnswer(zabbixAnswer: ZabbixAnswer): Promise<InfraEvent> {
     // const alertArray: Alert[] = [];
+
+    let infraEvent: InfraEvent = {
+      id: "",
+      origin: "",
+      eventid: "",
+      equipment: {
+          id: "",
+          name: "",
+          type: "",
+          ip: "",
+          hostname: "",
+          os: "",
+          os_version: "",
+      },
+      description: "",
+      status: "",
+      acknowledged: false,
+      severity: "",
+      timestamp: new Date(),
+      detail: "",
+    } as InfraEvent;
+
 
     const zabixAns = plainToInstance(ZabbixAnswer, JSON.parse(JSON.stringify(zabbixAnswer)), {
         excludeExtraneousValues: false,
@@ -96,11 +119,37 @@ import { queryEventById, queryHostByTriggerId } from "./zabbix.service";
                         console.log("problem name: " + res.name);
                         console.log("host name: " + zabixAns2.result[0].name);
                         console.log("hostid: " + zabixAns2.result[0].hostid);
+
+                        infraEvent = {
+                            id: "",
+                            origin: "zabbix",
+                            eventid: res.eventid,
+                            equipment: {
+                                id: "",
+                                name: zabixAns2.result[0].name,
+                                type: "",
+                                ip: "",
+                                hostname: zabixAns2.result[0].name,
+                                os: "",
+                                os_version: "",
+                            },
+                            description: res.name,
+                            status: "active",
+                            acknowledged: false,
+                            severity: zabbixSeverities[Number(res.severity)].name,
+                            timestamp: new Date(Number(res.clock) * 1000),
+                            detail: JSON.stringify(res),
+                        } as InfraEvent;
+                        console.log("infraEvent:");
+                        console.log(infraEvent);
+                        // save infraEvent to database
+                        // await infraEventRepository.save(infraEvent);
+                        // console.log("infraEvent saved to database");
                     }
                 }
             }
         }
     }
     
-    // return alertArray;
+    return infraEvent;
   }

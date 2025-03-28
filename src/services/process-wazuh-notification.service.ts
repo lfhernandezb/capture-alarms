@@ -6,6 +6,7 @@ import { DataFw } from '../model/wazuh/data-fw.model';
 import { DataPkg } from '../model/wazuh/data-pkg.model';
 import { DataOffice365 } from '../model/wazuh/data-office365.model';
 import { queryEventById } from './wazuh.service';
+import { InfraEvent, wazuSeverities } from "../model/infra-event.model";
 
 export async function processWazuhNotification(notification: Notification): Promise<Notification> {
   
@@ -61,9 +62,30 @@ function toCamelCase(input: string): string {
     return input.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 }
 
-export function parseWazuhAnswer(answer: WazuhAnswer) {
+export function parseWazuhAnswer(answer: WazuhAnswer): InfraEvent {
     console.log("answer:");
     console.log(answer);
+
+    let infraEvent: InfraEvent = {
+        id: "",
+        origin: "",
+        eventid: "",
+        equipment: {
+            id: "",
+            name: "",
+            type: "",
+            ip: "",
+            hostname: "",
+            os: "",
+            os_version: "",
+        },
+        description: "",
+        status: "",
+        acknowledged: false,
+        severity: "",
+        timestamp: new Date(),
+        detail: "",
+    } as InfraEvent;
 
     const alert = plainToInstance(WazuhAnswer, JSON.parse(JSON.stringify(answer)), {
       excludeExtraneousValues: false,
@@ -99,10 +121,33 @@ export function parseWazuhAnswer(answer: WazuhAnswer) {
         case "92650":
         case "92657":
             // Windows alert
-            const win = plainToInstance(DataWin, JSON.parse(JSON.stringify(data)), {
+            const dataWin = plainToInstance(DataWin, JSON.parse(JSON.stringify(data)), {
               excludeExtraneousValues: false,
             });
-            console.log(win);
+            console.log(dataWin);
+            infraEvent = {
+                id: "",
+                origin: "wazuh",
+                eventid: source.id,
+                equipment: {
+                    id: "",
+                    name: dataWin.win?.eventdata!.workstationName,
+                    type: "PC",
+                    ip: dataWin.win?.eventdata!.ipAddress,
+                    hostname: dataWin.win?.eventdata!.workstationName,
+                    os: "Windows",
+                    os_version: "",
+                },
+                description: rule!.description,
+                status: "active",
+                acknowledged: false,
+                severity: wazuSeverities[rule!.level!].name,
+                timestamp: new Date(source!.sourceTimestamp!),
+                detail: JSON.stringify(source),
+            } as InfraEvent;
+            // console.log(infraEvent);
+            // Save infraEvent to DB
+            // await this.eventRepository.save(infraEvent);
             break;
         case "70021":
         case "70022":
@@ -111,12 +156,58 @@ export function parseWazuhAnswer(answer: WazuhAnswer) {
               excludeExtraneousValues: false,
             });
             console.log(dataFw);
+            infraEvent = {
+                id: "",
+                origin: "wazuh",
+                eventid: source.id,
+                equipment: {
+                    id: "",
+                    name: dataFw.deviceName,
+                    type: dataFw.logType,
+                    ip: "",
+                    hostname: "",
+                    os: "",
+                    os_version: "",
+                },
+                description: rule!.description,
+                status: "active",
+                acknowledged: false,
+                severity: wazuSeverities[rule!.level!].name,
+                timestamp: new Date(source!.sourceTimestamp!),
+                detail: JSON.stringify(source),
+            } as InfraEvent;
+            // console.log(infraEvent);
+            // Save infraEvent to DB
+            // await this.eventRepository.save(infraEvent);
             break;
         case "2903":
             // Linux package
             const dataPkg = plainToInstance(DataPkg, JSON.parse(JSON.stringify(data)), {
               excludeExtraneousValues: false,
             });
+            infraEvent = {
+              id: "",
+              origin: "wazuh",
+              eventid: source.id,
+              equipment: {
+                  id: "",
+                  name: agent?.name,
+                  type: "Linux",
+                  ip: agent?.ip,
+                  hostname: agent?.name,
+                  os: "",
+                  os_version: "",
+              },
+              description: rule!.description,
+              status: "active",
+              acknowledged: false,
+              severity: wazuSeverities[rule!.level!].name,
+              timestamp: new Date(source!.sourceTimestamp!),
+              detail: JSON.stringify(source),
+          } as InfraEvent;
+          // console.log(infraEvent);
+            // Save infraEvent to DB
+            // await this.eventRepository.save(infraEvent);
             break;
         case "31151":
         case "1007":
@@ -128,6 +219,29 @@ export function parseWazuhAnswer(answer: WazuhAnswer) {
         case "31516":
               // related to servers, web servers, services, full_log
               console.log(fullLog);
+              infraEvent = {
+                id: "",
+                origin: "wazuh",
+                eventid: source.id,
+                equipment: {
+                    id: "",
+                    name: agent?.name,
+                    type: "",
+                    ip: agent?.ip,
+                    hostname: agent?.name,
+                    os: "",
+                    os_version: "",
+                },
+                description: rule!.description,
+                status: "active",
+                acknowledged: false,
+                severity: wazuSeverities[rule!.level!].name,
+                timestamp: new Date(source!.sourceTimestamp!),
+                detail: JSON.stringify(source),
+            } as InfraEvent;
+            // console.log(infraEvent);
+            // Save infraEvent to DB
+            // await this.eventRepository.save(infraEvent);
               break;
         case "91575":
             // office365
@@ -135,10 +249,38 @@ export function parseWazuhAnswer(answer: WazuhAnswer) {
                         excludeExtraneousValues: false,
                     });
             console.log(dataOffice365);
+            infraEvent = {
+              id: "",
+              origin: "wazuh",
+              eventid: source.id,
+              equipment: {
+                  id: "",
+                  name: "",
+                  type: "",
+                  ip: "",
+                  hostname: "",
+                  os: "",
+                  os_version: "",
+              },
+              description: rule!.description,
+              status: "active",
+              acknowledged: false,
+              severity: wazuSeverities[rule!.level!].name,
+              timestamp: new Date(source!.sourceTimestamp!),
+              detail: JSON.stringify(source),
+          } as InfraEvent;
+          // console.log(infraEvent);
+            // Save infraEvent to DB
+            // await this.eventRepository.save(infraEvent);
             break;
         default:
             console.log("******* No match, rule.id: " + rule!.id);
             break;
     }
 
+    console.log("infraEvent:");
+    console.log(infraEvent);
+    // Save event to DB
+    // await this.eventRepository.save(event);
+    return infraEvent;
 }
