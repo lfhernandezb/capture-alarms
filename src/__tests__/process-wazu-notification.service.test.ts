@@ -1,22 +1,23 @@
+import "reflect-metadata";
 import { plainToInstance } from 'class-transformer';
-import { DataFw } from '../model/data-fw.model';
-import { Response } from '../model/response.model';	
-import { Hits } from '../model/hits.model';
-import { Hit } from '../model/hit.model';
-import { Win } from '../model/win.model';
-import { DataWin } from '../model/data-win.model';
-import { DataPkg } from '../model/data-pkg.model';
-import { DataWebSrv } from '../model/data-web-srv.model';
-import { DataOffice365 } from '../model/data-office365.model';
+import { DataFw } from '../model/wazuh/data-fw.model';
+import { WazuhAnswer } from '../model/wazuh/wazuh-answer.model';	
+import { Hits } from '../model/wazuh/hits.model';
+import { Hit } from '../model/wazuh/hit.model';
+import { Win } from '../model/wazuh/win.model';
+import { DataWin } from '../model/wazuh/data-win.model';
+import { DataPkg } from '../model/wazuh/data-pkg.model';
+import { DataWebSrv } from '../model/wazuh/data-web-srv.model';
+import { DataOffice365 } from '../model/wazuh/data-office365.model';
 
-describe('doReceiveAlert', () => {
+describe('parseWazuhAnswer', () => {
     
     test('Correct parsing of alert 70022', () => {
         const alertStr = `
 {"took":49,"timed_out":false,"_shards":{"total":210,"successful":210,"skipped":0,"failed":0},"hits":{"total":{"value":1,"relation":"eq"},"max_score":14.295748,"hits":[{"_index":"wazuh-alerts-4.x-2025.03.10","_id":"YmKMgZUBVJrWq0tirj19","_score":14.295748,"_source":{"agent":{"name":"wazuh","id":"000"},"manager":{"name":"wazuh"},"data":{"date":"2025-03-10","dst_country_code":"CHL","timezone":"-03","ips_policy_id":"0","dst_ip":"152.231.98.219","sent_bytes":"0","duration":"0","src_ip":"89.248.163.73","protocol":"TCP","device_name":"XG310","log_type":"Firewall","application_risk":"0","src_country_code":"NLD","tran_dst_port":"0","recv_pkts":"0","appfilter_policy_id":"0","iap":"0","fw_rule_id":"0","log_id":"010202601001","sophos_fw_status_msg":"Deny","sent_pkts":"0","log_component":"Invalid Traffic","appresolvedby":"Signature","device_id":"C320ABF22YJBD56","hb_health":"No Heartbeat","log_subtype":"Denied","message":"Could not associate packet to any connection.","priority":"Information","src_port":"40845","policy_type":"0","tran_src_port":"0","recv_bytes":"0","th":"No Heartbeat","dst_port":"3345","name":"XG310","time":"16:33:55","device":"SFW"},"rule":{"firedtimes":29467,"mail":false,"level":5,"description":"Traffic Denied: from 89.248.163.73 to 152.231.98.219","groups":["sophos-fw"],"id":"70021"},"decoder":{"name":"sophos-fw"},"full_log":"device=\\"SFW\\" date=2025-03-10 time=16:33:55 timezone=\\"-03\\" device_name=\\"XG310\\" device_id=C320ABF22YJBD56 log_id=\\"010202601001\\" log_type=\\"Firewall\\" log_component=\\"Invalid Traffic\\" log_subtype=\\"Denied\\" status=\\"Deny\\" priority=Information duration=0 fw_rule_id=0 fw_rule_name=\\"\\" fw_rule_section=\\"\\" nat_rule_id=0 nat_rule_name=\\"\\" policy_type=0 sdwan_profile_id_request=0 sdwan_profile_name_request=\\"\\" sdwan_profile_id_reply=0 sdwan_profile_name_reply=\\"\\" gw_id_request=0 gw_name_request=\\"\\" gw_id_reply=0 gw_name_reply=\\"\\" sdwan_route_id_request=0 sdwan_route_name_request=\\"\\" sdwan_route_id_reply=0 sdwan_route_name_reply=\\"\\" user_name=\\"\\" user_gp=\\"\\" iap=0 ips_policy_id=0 appfilter_policy_id=0 application=\\"\\" application_risk=0 application_technology=\\"\\" application_category=\\"\\" vlan_id=\\"\\" ether_type=IPv4 (0x0800) bridge_name=\\"\\" bridge_display_name=\\"\\" in_interface=\\"\\" in_display_interface=\\"\\" out_interface=\\"\\" out_display_interface=\\"\\" src_mac= dst_mac= src_ip=89.248.163.73 src_country_code=NLD dst_ip=152.231.98.219 dst_country_code=CHL protocol=\\"TCP\\" src_port=40845 dst_port=3345 sent_pkts=0 recv_pkts=0 sent_bytes=0 recv_bytes=0 tran_src_ip= tran_src_port=0 tran_dst_ip= tran_dst_port=0 srczonetype=\\"\\" srczone=\\"\\" dstzonetype=\\"\\" dstzone=\\"\\" dir_disp=\\"\\" connid=\\"\\" vconnid=\\"\\" hb_health=\\"No Heartbeat\\" message=\\"Could not associate packet to any connection.\\" appresolvedby=\\"Signature\\" app_is_cloud=0 log_occurrence=1 flags=0","input":{"type":"log"},"@timestamp":"2025-03-10T19:33:55.036Z","location":"172.31.248.4","id":"1741635235.1349923869","timestamp":"2025-03-10T16:33:55.036-0300"}}]}}`;
                 // const alert = customSerializer.deserializeObject<Response>(alertStr70022, Response);
         console.log(alertStr);
-        const alert = plainToInstance(Response, JSON.parse(alertStr), {
+        const alert = plainToInstance(WazuhAnswer, JSON.parse(alertStr), {
                 excludeExtraneousValues: false,
               });
         
@@ -67,7 +68,7 @@ describe('doReceiveAlert', () => {
 
         // const alert = customSerializer.deserializeObject<Response>(alertStr70022, Response);
         console.log(alertStr);
-        const alert = plainToInstance(Response, JSON.parse(alertStr), {
+        const alert = plainToInstance(WazuhAnswer, JSON.parse(alertStr), {
                 excludeExtraneousValues: false,
               });
         
@@ -124,7 +125,7 @@ describe('doReceiveAlert', () => {
 
         // const alert = customSerializer.deserializeObject<Response>(alertStr70022, Response);
         console.log(alertStr);
-        const alert = plainToInstance(Response, JSON.parse(alertStr), {
+        const alert = plainToInstance(WazuhAnswer, JSON.parse(alertStr), {
                 excludeExtraneousValues: false,
               });
         
@@ -185,7 +186,7 @@ describe('doReceiveAlert', () => {
 
         // const alert = customSerializer.deserializeObject<Response>(alertStr70022, Response);
         console.log(alertStr);
-        const alert = plainToInstance(Response, JSON.parse(alertStr), {
+        const alert = plainToInstance(WazuhAnswer, JSON.parse(alertStr), {
                 excludeExtraneousValues: false,
               });
         
@@ -243,7 +244,7 @@ describe('doReceiveAlert', () => {
 
         // const alert = customSerializer.deserializeObject<Response>(alertStr70022, Response);
         console.log(alertStr);
-        const alert = plainToInstance(Response, JSON.parse(alertStr), {
+        const alert = plainToInstance(WazuhAnswer, JSON.parse(alertStr), {
                 excludeExtraneousValues: false,
               });
         
@@ -307,7 +308,7 @@ describe('doReceiveAlert', () => {
 
         // const alert = customSerializer.deserializeObject<Response>(alertStr70022, Response);
         console.log(alertStr);
-        const alert = plainToInstance(Response, JSON.parse(alertStr), {
+        const alert = plainToInstance(WazuhAnswer, JSON.parse(alertStr), {
                 excludeExtraneousValues: false,
               });
         
@@ -373,7 +374,7 @@ describe('doReceiveAlert', () => {
 
         // const alert = customSerializer.deserializeObject<Response>(alertStr70022, Response);
         console.log(alertStr);
-        const alert = plainToInstance(Response, JSON.parse(alertStr), {
+        const alert = plainToInstance(WazuhAnswer, JSON.parse(alertStr), {
                 excludeExtraneousValues: false,
               });
         

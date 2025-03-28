@@ -1,5 +1,4 @@
 // import { JsonObject, JsonProperty } from "typescript-json-serializer";
-import "reflect-metadata";
 import { Expose, Type } from "class-transformer";
 import { Source } from "./source.model";
 

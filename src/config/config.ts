@@ -16,6 +16,8 @@ interface EnvConfig {
     listeningAddress: string;
     corsOrigin: string;
     timeout: number;
+    zabbixUrl: string;
+    zabbixToken: string;
 }
 
 
@@ -48,6 +50,24 @@ const getConfig = (): EnvConfig => {
     if (!process.env.WAZUH_URL) {
         throw new Error("Missing WAZUH_URL in .env");
     }
+    if (!process.env.LISTENING_PORT) {
+        throw new Error("Missing LISTENING_PORT in .env");
+    }
+    if (!process.env.LISTENING_ADDRESS) {
+        throw new Error("Missing LISTENING_ADDRESS in .env");
+    }
+    if (!process.env.CORS_ORIGIN) {
+        throw new Error("Missing CORS_ORIGIN in .env");
+    }
+    if (!process.env.TIMEOUT) {
+        throw new Error("Missing TIMEOUT in .env");
+    }
+    if (!process.env.ZABBIX_URL) {
+        throw new Error("Missing ZABBIX_URL in .env");
+    }
+    if (!process.env.ZABBIX_TOKEN) {
+        throw new Error("Missing ZABBIX_TOKEN in .env");
+    }
 
     return {
         dbUser: process.env.DB_USER,
@@ -62,6 +82,8 @@ const getConfig = (): EnvConfig => {
         listeningAddress: process.env.LISTENING_ADDRESS ? process.env.LISTENING_ADDRESS : "localhost",
         corsOrigin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN : "http://localhost:8081",
         timeout: parseInt(process.env.TIMEOUT ? process.env.TIMEOUT : "4000", 10),
+        zabbixUrl: process.env.ZABBIX_URL ? process.env.ZABBIX_URL : "http://localhost:8082",
+        zabbixToken: process.env.ZABBIX_TOKEN ? process.env.ZABBIX_TOKEN : "Zabbix-Token",
     };
   };
 

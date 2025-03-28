@@ -12,7 +12,7 @@ import { Shards } from "./shards.model";
 import { Hits } from "./hits.model";
 
 // @JsonObject()
-export class Response {
+export class WazuhAnswer {
     // @JsonProperty({ name: "took" })
     took?:     number;
     // @JsonProperty({ name: "timed_out" })

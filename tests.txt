@@ -1,0 +1,9 @@
+curl -i -X POST http://localhost:8080/api/alert/zabbix/ \
+-H "Content-Type: application/json" \
+-d "{\"Problem started at 14:35:00 on 2025.03.13 Problem name: MSSQL: Too many physical reads occurring Host: ubuntutest Severity: Warning Operational data: 0.11641581447693426, 0.11641581447693426 Original problem ID: 15415\": \"\"}"
+
+
+
+curl -i -X POST http://localhost:8080/api/alert/wazuh/ \
+-H "Content-Type: application/json" \
+-d '{"attachments": [{"color": "warning", "pretext": "WAZUH Alert", "title": "Suspicious URL access.", "text": "127.0.0.1 - - [27/Mar/2025:17:39:38 -0300] \"GET /server-status?auto HTTP/1.1\" 200 1027 \"-\" \"Zabbix 5.4.5\"", "fields": [], "ts": "1743107979.1310746420" }]}'

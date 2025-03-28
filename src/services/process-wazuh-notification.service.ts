@@ -1,52 +1,47 @@
-import 'reflect-metadata';
 import { plainToInstance } from "class-transformer";
-import { Alert } from "../model/alert.model";
-import { DataFw } from "../model/data-fw.model";
-import { DataOffice365 } from "../model/data-office365.model";
-import { Hits } from "../model/hits.model";
-import { Response } from "../model/response.model";
-import { Win } from "../model/win.model";
-import { QueryWazuhService } from "./query-wazuh.service";
-import { DataPkg } from "../model/data-pkg.model";
-import { DataWin } from '../model/data-win.model';
+import { Notification } from '../model/wazuh/notification.model';
+import { WazuhAnswer } from '../model/wazuh/wazuh-answer.model';
+import { DataWin } from '../model/wazuh/data-win.model';
+import { DataFw } from '../model/wazuh/data-fw.model';
+import { DataPkg } from '../model/wazuh/data-pkg.model';
+import { DataOffice365 } from '../model/wazuh/data-office365.model';
+import { queryEventById } from './wazuh.service';
 
-export async function doReceiveAlert (alert: Alert): Promise<Alert> {
+export async function processWazuhNotification(notification: Notification): Promise<Notification> {
   
   /*
-  const pairsArray: string[] = alert.attachments[0].text.split(/\s+/);
-  // Create a new Map
-  let myMap = new Map<string, string>();
-
-  // iterate over the array of pairs
-  for (let i = 0; i < pairsArray.length; i++) {
-    // split each pair into key and value
-    const pair: string[] = pairsArray[i].split('=');
-    const key: string = pair[0];
-    const value: string = pair[1];
-
-    // add the key-value pair to the alert object
-    myMap.set(key, value);
+  Se recibe algo de esta forma:
+  {
+  attachments: [
+      {
+      color: 'warning',
+      pretext: 'WAZUH Alert',
+      title: 'Suspicious URL access.',
+      text: '127.0.0.1 - - [27/Mar/2025:17:39:38 -0300] "GET /server-status?auto HTTP/1.1" 200 1027 "-" "Zabbix 5.4.5"',
+      fields: [Array],
+      ts: '1743107979.1310746420'
+      }
+    ]
   }
-  console.log(myMap);
   */
-  console.log(alert);
+  console.log(notification);
   // iterate over fields array
-  for (let i = 0; i < alert.attachments![0].fields!.length; i++) {
+  for (let i = 0; i < notification.attachments![0].fields!.length; i++) {
        // get the title and value of each field
-       const title = alert.attachments![0].fields![i].title;
-       const value = alert.attachments![0].fields![i].value;
+       const title = notification.attachments![0].fields![i].title;
+       const value = notification.attachments![0].fields![i].value;
        // add the key-value pair to the alert object 
        console.log(title + " : " + value);
   }
     // console.log(alert);
 
     // query Wazuh API
-    const resp = await QueryWazuhService(alert.attachments![0].ts!);
+    const response = await queryEventById(notification.attachments![0].ts!);
     // const resp = await QueryWazuhService("1741206721.1499080785");
-    const response: Response = resp.data;
-    parseWazuhResponse(response);
+    const answer: WazuhAnswer = response.data;
+    parseWazuhAnswer(answer);
 
-    return alert;
+    return notification;
 }
 
 export function parseKeyValueString<T>(input: string, clazz: { new (): T }): T {
@@ -66,11 +61,11 @@ function toCamelCase(input: string): string {
     return input.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 }
 
-export function parseWazuhResponse(resp: Response) {
-    console.log("resp:");
-    console.log(resp);
+export function parseWazuhAnswer(answer: WazuhAnswer) {
+    console.log("answer:");
+    console.log(answer);
 
-    const alert = plainToInstance(Response, JSON.parse(JSON.stringify(resp)), {
+    const alert = plainToInstance(WazuhAnswer, JSON.parse(JSON.stringify(answer)), {
       excludeExtraneousValues: false,
     });
 

@@ -1,11 +1,10 @@
 import { classToPlain, instanceToPlain } from "class-transformer";
 import axios from "axios";
 import * as https from "https";
-import { Bool, Match, Must, Query, Request } from "../model/request.model";
-import { Response } from "../model/response.model";
 import { config } from "../config/config";
+import { WazuhQuery } from "../model/wazuh/wazuh-query.model";
 
-async function QueryWazuhService(alertId: string): Promise<any> {
+async function queryEventById(eventId: string): Promise<any> {
     /*
     // create a new Match object
     const match: Match = new Match();
@@ -34,13 +33,13 @@ async function QueryWazuhService(alertId: string): Promise<any> {
     request.setQuery(query);
     */
     
-    const request: Request = {
+    const wazuQuery: WazuhQuery = {
         query: {
             bool: {
                 must: [
                     {
                         match: {
-                            id: alertId
+                            id: eventId
                         }
                     }
                 ]
@@ -60,9 +59,9 @@ async function QueryWazuhService(alertId: string): Promise<any> {
             password: config.wazuhPassword
         },
         httpsAgent: new https.Agent({ rejectUnauthorized: false }),
-        data: instanceToPlain(request, ) // data in body
+        data: instanceToPlain(wazuQuery, ) // data in body
     });
   }
   
-  export { QueryWazuhService };
+  export { queryEventById };
   

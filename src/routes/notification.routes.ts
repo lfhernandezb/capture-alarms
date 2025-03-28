@@ -1,7 +1,8 @@
 import { Router, Request, Response } from "express";
-import { receiveWazuhAlert, receiveZabbixAlert, welcome } from "../controllers/home.controller";
+import { receiveWazuhAlert, welcome } from "../controllers/wazuh.controller";
+import { receiveZabbixAlert } from "../controllers/zabbix.controller";
 
-class HomeRoutes {
+class NotificationRoutes {
   router = Router();
 
   constructor() {
@@ -15,4 +16,4 @@ class HomeRoutes {
   }
 }
 
-export default new HomeRoutes().router;
+export default new NotificationRoutes().router;

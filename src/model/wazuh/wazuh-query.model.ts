@@ -95,7 +95,7 @@ export class Match {
 //
 //   const request = Convert.toRequest(json);
 
-export interface Request {
+export interface WazuhQuery {
     query?: Query;
 }
 
