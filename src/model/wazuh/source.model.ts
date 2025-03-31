@@ -18,8 +18,10 @@ export class Source {
     fullLog?:        string;
     @Type(() => Input)
     input?:           Input;
-    timestamp?:       Date;
+    @Expose({ name: '@timestamp' })
+    timestamp?:       string;
     location?:        string;
     id?:              string;
+    @Expose({ name: 'timestamp' })
     sourceTimestamp?: string;
 }

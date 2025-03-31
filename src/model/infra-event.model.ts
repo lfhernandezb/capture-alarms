@@ -1,3 +1,6 @@
+import { Sequelize, DataTypes, Model, Optional, Association } from "sequelize";
+import { sequelize } from "../config/sequelize";
+
 interface severity {
     id: number;
     name: string;
@@ -32,25 +35,137 @@ export const wazuSeverities: severity[] = [
     { id: 16, name: 'Crítica' },
   ]
 
-export interface Equipment {
-    id: string;
-    name: string;
-    type: string;
-    ip: string;
-    hostname: string;
-    os: string;
-    os_version: string;
+// Define the Equipment model
+class Equipment extends Model {
+  public id?: number;
+  public name?: string;
+  public type?: string;
+  public ip?: string;
+  public hostname?: string;
+  public os?: string;
+  public os_version?: string;
 }
 
-export interface InfraEvent {
-    id: string;
-    origin: string;
-    eventid: string;
-    equipment: Equipment;
-    description: string;
-    status: string;
-    acknowledged: boolean;
-    severity: string;
-    timestamp: Date;
-    detail: string;
+Equipment.init(
+  {
+    id: {
+      type: DataTypes.BIGINT,
+      primaryKey: true,
+      autoIncrement: true,
+      allowNull: false,
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    type: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    ip: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    hostname: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    os: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    os_version: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+  },
+  {
+    sequelize,
+    tableName: "equipment",
+  }
+);
+
+// Define the InfraEvent model
+class InfraEvent extends Model {
+  public id?: number;
+  public origin?: string;
+  public eventid?: string;
+  public equipmentId?: number; // Foreign key
+  public description?: string;
+  public status?: string;
+  public acknowledged?: boolean;
+  public severity?: string;
+  public timestamp?: Date;
+  public detail?: string;
+
+    // Add the Equipment association
+    equipment?: Equipment;
+
+    static associations: {
+      equipment: Association<InfraEvent, Equipment>;
+    };
 }
+
+InfraEvent.init(
+  {
+    id: {
+      type: DataTypes.BIGINT,
+      primaryKey: true,
+      autoIncrement: true,
+      allowNull: false,
+    },
+    origin: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    eventid: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    equipmentId: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+      references: {
+        model: Equipment,
+        key: "id",
+      },
+      onUpdate: "CASCADE",
+      onDelete: "CASCADE",    
+    },
+    description: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    acknowledged: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+    },
+    severity: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    timestamp: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    detail: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+  },
+  {
+    sequelize,
+    tableName: "infra_events",
+  }
+);
+
+// Define associations
+InfraEvent.belongsTo(Equipment, { foreignKey: "equipmentId" });
+Equipment.hasMany(InfraEvent, { foreignKey: "equipmentId" });
+
+export { sequelize, InfraEvent, Equipment };

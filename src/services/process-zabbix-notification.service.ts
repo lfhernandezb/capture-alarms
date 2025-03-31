@@ -2,6 +2,8 @@ import { plainToInstance } from "class-transformer";
 import { ZabbixAnswer } from "../model/zabbix/zabbix-answer.model";
 import { queryEventById, queryHostByTriggerId } from "./zabbix.service";
 import { InfraEvent, zabbixSeverities } from "../model/infra-event.model";
+import { createInfraEvent } from "../repositories/infra-event.repository";
+import { createEquipment } from "../repositories/equipment.repository";
 
 
   export async function processZabbixNotification(notification: string): Promise<string> {
@@ -12,26 +14,34 @@ import { InfraEvent, zabbixSeverities } from "../model/infra-event.model";
     'Problem started at 14:35:00 on 2025.03.13 Problem name: MSSQL: Too many physical reads occurring Host: ubuntutest Severity: Warning Operational data: 0.11641581447693426, 0.11641581447693426 Original problem ID: 15415 ': ''
   }
     */
-    // console.log(notification);
+    try {
+      // console.log(notification);
 
-    // obtenemos el id del evento
-    const regex = /Original problem ID:\s*(\d+)/;
-    const match = JSON.stringify(notification).match(regex);
+      // obtenemos el id del evento
+      const regex = /Original problem ID:\s*(\d+)/;
+      const match = JSON.stringify(notification).match(regex);
+      
+      if (match) {
+        const id = match[1];
+        console.log(id); // Output: 15415
+
+        // query Zabbix API
+        const response = await queryEventById(Number(id));
+        // const resp = await QueryZabbixService("1741206721.1499080785");
+        const answer: ZabbixAnswer = response.data;
+        parseZabbixAnswer(answer);
+      } else {
+        console.log("No match found");
+      }  
     
-    if (match) {
-      const id = match[1];
-      console.log(id); // Output: 15415
-
-      // query Zabbix API
-      const response = await queryEventById(Number(id));
-      // const resp = await QueryZabbixService("1741206721.1499080785");
-      const answer: ZabbixAnswer = response.data;
-      parseZabbixAnswer(answer);
-    } else {
-      console.log("No match found");
-    }  
-  
       return notification;
+      
+    } catch (error) {
+      console.error("Error processing Wazuh notification:", error);
+      // Handle the error without crashing the app
+      return notification; // Optionally return the notification or a default value
+        
+    }
   }
   
   export function parseKeyValueString<T>(input: string, clazz: { new (): T }): T {
@@ -73,7 +83,7 @@ import { InfraEvent, zabbixSeverities } from "../model/infra-event.model";
       severity: "",
       timestamp: new Date(),
       detail: "",
-    } as InfraEvent;
+    } as unknown as InfraEvent;
 
 
     const zabixAns = plainToInstance(ZabbixAnswer, JSON.parse(JSON.stringify(zabbixAnswer)), {
@@ -121,11 +131,11 @@ import { InfraEvent, zabbixSeverities } from "../model/infra-event.model";
                         console.log("hostid: " + zabixAns2.result[0].hostid);
 
                         infraEvent = {
-                            id: "",
+                            id: undefined,
                             origin: "zabbix",
                             eventid: res.eventid,
                             equipment: {
-                                id: "",
+                                id: undefined,
                                 name: zabixAns2.result[0].name,
                                 type: "",
                                 ip: "",
@@ -139,12 +149,61 @@ import { InfraEvent, zabbixSeverities } from "../model/infra-event.model";
                             severity: zabbixSeverities[Number(res.severity)].name,
                             timestamp: new Date(Number(res.clock) * 1000),
                             detail: JSON.stringify(res),
-                        } as InfraEvent;
+                        } as unknown as InfraEvent;
                         console.log("infraEvent:");
                         console.log(infraEvent);
                         // save infraEvent to database
                         // await infraEventRepository.save(infraEvent);
                         // console.log("infraEvent saved to database");
+
+                        // Save the InfraEvent and Equipment to the database
+                        try {
+                          // Save Equipment first
+                          if (!infraEvent.equipment) {
+                              throw new Error("Equipment data is undefined");
+                          }
+                          const savedEquipment = await createEquipment(infraEvent.equipment);
+                          /*
+                          const equipment = await Equipment.upsert({
+                              id: infraEvent.equipment!.id,
+                              name: infraEvent.equipment!.name,
+                              type: infraEvent.equipment!.type,
+                              ip: infraEvent.equipment!.ip,
+                              hostname: infraEvent.equipment!.hostname,
+                              os: infraEvent.equipment!.os,
+                              os_version: infraEvent.equipment!.os_version,
+                          });
+                          */
+                          console.log("Equipment saved to database:", savedEquipment.toJSON());
+                          // Save InfraEvent
+                          if (!infraEvent) {
+                              throw new Error("InfraEvent data is undefined");
+                          }
+                          infraEvent.equipmentId = savedEquipment.id; // Set the foreign key
+                          infraEvent.equipment = savedEquipment; // Set the equipment object
+                          // Save InfraEvent with the foreign key
+                          const savedInfraEvent = await createInfraEvent(infraEvent);
+                          /*
+                          const savedInfraEvent = await InfraEvent.create({
+                              id: infraEvent.id,
+                              origin: infraEvent.origin,
+                              eventid: infraEvent.eventid,
+                              equipmentId: infraEvent.equipment!.id, // Foreign key
+                              description: infraEvent.description,
+                              status: infraEvent.status,
+                              acknowledged: infraEvent.acknowledged,
+                              severity: infraEvent.severity,
+                              timestamp: infraEvent.timestamp,
+                              detail: infraEvent.detail,
+                          });
+                          */
+                          console.log("InfraEvent saved to database:", savedInfraEvent.toJSON());
+                          return savedInfraEvent;
+                        } catch (error) {
+                            console.error("Error saving InfraEvent to database:", error);
+                            throw error;
+                        }
+
                     }
                 }
             }

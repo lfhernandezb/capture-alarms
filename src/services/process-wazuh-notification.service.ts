@@ -6,7 +6,9 @@ import { DataFw } from '../model/wazuh/data-fw.model';
 import { DataPkg } from '../model/wazuh/data-pkg.model';
 import { DataOffice365 } from '../model/wazuh/data-office365.model';
 import { queryEventById } from './wazuh.service';
-import { InfraEvent, wazuSeverities } from "../model/infra-event.model";
+import { InfraEvent, Equipment, wazuSeverities } from "../model/infra-event.model";
+import { createEquipment } from "../repositories/equipment.repository";
+import { createInfraEvent } from "../repositories/infra-event.repository";
 
 export async function processWazuhNotification(notification: Notification): Promise<Notification> {
   
@@ -25,24 +27,32 @@ export async function processWazuhNotification(notification: Notification): Prom
     ]
   }
   */
-  console.log(notification);
-  // iterate over fields array
-  for (let i = 0; i < notification.attachments![0].fields!.length; i++) {
-       // get the title and value of each field
-       const title = notification.attachments![0].fields![i].title;
-       const value = notification.attachments![0].fields![i].value;
-       // add the key-value pair to the alert object 
-       console.log(title + " : " + value);
+  try {
+    console.log(notification);
+    // iterate over fields array
+    for (let i = 0; i < notification.attachments![0].fields!.length; i++) {
+         // get the title and value of each field
+         const title = notification.attachments![0].fields![i].title;
+         const value = notification.attachments![0].fields![i].value;
+         // add the key-value pair to the alert object 
+         console.log(title + " : " + value);
+    }
+      // console.log(alert);
+  
+      // query Wazuh API
+      const response = await queryEventById(notification.attachments![0].ts!);
+      // const resp = await QueryWazuhService("1741206721.1499080785");
+      const answer: WazuhAnswer = response.data;
+      parseWazuhAnswer(answer);
+  
+      return notification;
+      
+  } catch (error) {
+    console.error("Error processing Wazuh notification:", error);
+    // Handle the error without crashing the app
+    return notification; // Optionally return the notification or a default value
+
   }
-    // console.log(alert);
-
-    // query Wazuh API
-    const response = await queryEventById(notification.attachments![0].ts!);
-    // const resp = await QueryWazuhService("1741206721.1499080785");
-    const answer: WazuhAnswer = response.data;
-    parseWazuhAnswer(answer);
-
-    return notification;
 }
 
 export function parseKeyValueString<T>(input: string, clazz: { new (): T }): T {
@@ -62,30 +72,9 @@ function toCamelCase(input: string): string {
     return input.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 }
 
-export function parseWazuhAnswer(answer: WazuhAnswer): InfraEvent {
+export async function parseWazuhAnswer(answer: WazuhAnswer): Promise<InfraEvent> {
     console.log("answer:");
     console.log(answer);
-
-    let infraEvent: InfraEvent = {
-        id: "",
-        origin: "",
-        eventid: "",
-        equipment: {
-            id: "",
-            name: "",
-            type: "",
-            ip: "",
-            hostname: "",
-            os: "",
-            os_version: "",
-        },
-        description: "",
-        status: "",
-        acknowledged: false,
-        severity: "",
-        timestamp: new Date(),
-        detail: "",
-    } as InfraEvent;
 
     const alert = plainToInstance(WazuhAnswer, JSON.parse(JSON.stringify(answer)), {
       excludeExtraneousValues: false,
@@ -115,6 +104,20 @@ export function parseWazuhAnswer(answer: WazuhAnswer): InfraEvent {
     console.log("agent.os:" + agent!.os);
     console.log("agent.status:" + agent!.status);
     console.log("agent.version:" + agent!.version);
+
+    let infraEvent = {
+      id: undefined,
+      origin: "wazuh",
+      eventid: source.id,
+      equipment: undefined,
+      description: rule!.description || "",
+      status: "active",
+      acknowledged: false,
+      severity: wazuSeverities[rule!.level!]?.name || "",
+      timestamp: new Date(source!.sourceTimestamp!),
+      detail: JSON.stringify(source),
+    } as unknown as InfraEvent;
+
     
     switch (rule!.id) {
         case "60115":
@@ -125,26 +128,16 @@ export function parseWazuhAnswer(answer: WazuhAnswer): InfraEvent {
               excludeExtraneousValues: false,
             });
             console.log(dataWin);
-            infraEvent = {
-                id: "",
-                origin: "wazuh",
-                eventid: source.id,
-                equipment: {
-                    id: "",
-                    name: dataWin.win?.eventdata!.workstationName,
+            infraEvent.equipment = {
+                    id: undefined,
+                    name: dataWin.win?.eventdata!.workstationName || "",
                     type: "PC",
-                    ip: dataWin.win?.eventdata!.ipAddress,
-                    hostname: dataWin.win?.eventdata!.workstationName,
+                    ip: dataWin.win?.eventdata!.ipAddress || "",
+                    hostname: dataWin.win?.eventdata!.workstationName || "",
                     os: "Windows",
                     os_version: "",
-                },
-                description: rule!.description,
-                status: "active",
-                acknowledged: false,
-                severity: wazuSeverities[rule!.level!].name,
-                timestamp: new Date(source!.sourceTimestamp!),
-                detail: JSON.stringify(source),
-            } as InfraEvent;
+            } as unknown as Equipment;
+
             // console.log(infraEvent);
             // Save infraEvent to DB
             // await this.eventRepository.save(infraEvent);
@@ -156,26 +149,15 @@ export function parseWazuhAnswer(answer: WazuhAnswer): InfraEvent {
               excludeExtraneousValues: false,
             });
             console.log(dataFw);
-            infraEvent = {
-                id: "",
-                origin: "wazuh",
-                eventid: source.id,
-                equipment: {
-                    id: "",
+            infraEvent.equipment = {
+                    id: undefined,
                     name: dataFw.deviceName,
                     type: dataFw.logType,
                     ip: "",
                     hostname: "",
                     os: "",
                     os_version: "",
-                },
-                description: rule!.description,
-                status: "active",
-                acknowledged: false,
-                severity: wazuSeverities[rule!.level!].name,
-                timestamp: new Date(source!.sourceTimestamp!),
-                detail: JSON.stringify(source),
-            } as InfraEvent;
+            } as unknown as Equipment;
             // console.log(infraEvent);
             // Save infraEvent to DB
             // await this.eventRepository.save(infraEvent);
@@ -185,26 +167,15 @@ export function parseWazuhAnswer(answer: WazuhAnswer): InfraEvent {
             const dataPkg = plainToInstance(DataPkg, JSON.parse(JSON.stringify(data)), {
               excludeExtraneousValues: false,
             });
-            infraEvent = {
-              id: "",
-              origin: "wazuh",
-              eventid: source.id,
-              equipment: {
-                  id: "",
+            infraEvent.equipment = {
+                  id: undefined,
                   name: agent?.name,
                   type: "Linux",
                   ip: agent?.ip,
                   hostname: agent?.name,
                   os: "",
                   os_version: "",
-              },
-              description: rule!.description,
-              status: "active",
-              acknowledged: false,
-              severity: wazuSeverities[rule!.level!].name,
-              timestamp: new Date(source!.sourceTimestamp!),
-              detail: JSON.stringify(source),
-          } as InfraEvent;
+              } as unknown as Equipment;
           // console.log(infraEvent);
             // Save infraEvent to DB
             // await this.eventRepository.save(infraEvent);
@@ -219,26 +190,15 @@ export function parseWazuhAnswer(answer: WazuhAnswer): InfraEvent {
         case "31516":
               // related to servers, web servers, services, full_log
               console.log(fullLog);
-              infraEvent = {
-                id: "",
-                origin: "wazuh",
-                eventid: source.id,
-                equipment: {
-                    id: "",
+              infraEvent.equipment = {
+                    id: undefined,
                     name: agent?.name,
                     type: "",
                     ip: agent?.ip,
                     hostname: agent?.name,
                     os: "",
                     os_version: "",
-                },
-                description: rule!.description,
-                status: "active",
-                acknowledged: false,
-                severity: wazuSeverities[rule!.level!].name,
-                timestamp: new Date(source!.sourceTimestamp!),
-                detail: JSON.stringify(source),
-            } as InfraEvent;
+                } as unknown as Equipment;
             // console.log(infraEvent);
             // Save infraEvent to DB
             // await this.eventRepository.save(infraEvent);
@@ -249,29 +209,18 @@ export function parseWazuhAnswer(answer: WazuhAnswer): InfraEvent {
                         excludeExtraneousValues: false,
                     });
             console.log(dataOffice365);
-            infraEvent = {
-              id: "",
-              origin: "wazuh",
-              eventid: source.id,
-              equipment: {
-                  id: "",
+            infraEvent.equipment = {
+                  id: undefined,
                   name: "",
                   type: "",
                   ip: "",
                   hostname: "",
                   os: "",
                   os_version: "",
-              },
-              description: rule!.description,
-              status: "active",
-              acknowledged: false,
-              severity: wazuSeverities[rule!.level!].name,
-              timestamp: new Date(source!.sourceTimestamp!),
-              detail: JSON.stringify(source),
-          } as InfraEvent;
+              } as unknown as Equipment;
           // console.log(infraEvent);
-            // Save infraEvent to DB
-            // await this.eventRepository.save(infraEvent);
+            // Save infraEvent to DB using sequelize
+            // await this.eventRepository.save(infraEvent);            
             break;
         default:
             console.log("******* No match, rule.id: " + rule!.id);
@@ -280,7 +229,49 @@ export function parseWazuhAnswer(answer: WazuhAnswer): InfraEvent {
 
     console.log("infraEvent:");
     console.log(infraEvent);
-    // Save event to DB
-    // await this.eventRepository.save(event);
-    return infraEvent;
+    // Save the InfraEvent and Equipment to the database
+    try {
+      // Save Equipment first
+      if (!infraEvent.equipment) {
+          throw new Error("Equipment data is undefined");
+      }
+      const savedEquipment = await createEquipment(infraEvent.equipment);
+      /*
+      const equipment = await Equipment.upsert({
+          id: infraEvent.equipment!.id,
+          name: infraEvent.equipment!.name,
+          type: infraEvent.equipment!.type,
+          ip: infraEvent.equipment!.ip,
+          hostname: infraEvent.equipment!.hostname,
+          os: infraEvent.equipment!.os,
+          os_version: infraEvent.equipment!.os_version,
+      });
+      */
+      console.log("Equipment saved to database:", savedEquipment.toJSON());
+      // Save InfraEvent
+      infraEvent.equipmentId = savedEquipment.id; // Set the foreign key
+      infraEvent.equipment = savedEquipment; // Set the equipment object
+      // Save InfraEvent
+      const savedInfraEvent = await createInfraEvent(infraEvent);
+      /*
+      const savedInfraEvent = await InfraEvent.create({
+          id: infraEvent.id,
+          origin: infraEvent.origin,
+          eventid: infraEvent.eventid,
+          equipmentId: infraEvent.equipment!.id, // Foreign key
+          description: infraEvent.description,
+          status: infraEvent.status,
+          acknowledged: infraEvent.acknowledged,
+          severity: infraEvent.severity,
+          timestamp: infraEvent.timestamp,
+          detail: infraEvent.detail,
+      });
+      */
+      console.log("InfraEvent saved to database:", savedInfraEvent.toJSON());
+      return savedInfraEvent;
+    } catch (error) {
+        console.error("Error saving InfraEvent to database:", error);
+        throw error;
+    }
+
 }
