@@ -6,9 +6,15 @@ export function welcome (req: Request, res: Response): void {
 }
 
 export async function receiveZabbixAlert (req: Request, res: Response): Promise<void> {
-  console.log('Zabbix alert received');
-  console.log(req.body);
-  const notification: string = await processZabbixNotification(req.body);
+  try {
+    console.log('Zabbix alert received');
+    console.log(req.body);
+    const notification: string = await processZabbixNotification(req.body);
 
-  res.status(200).json({ message: "Ok." });
+    res.status(200).json({ message: "Ok." });    
+  } catch (error) {
+    console.error('Error processing Zabbix alert:', error);
+    res.status(500).json({ error: "Processing error" });
+    
+  }
 }
