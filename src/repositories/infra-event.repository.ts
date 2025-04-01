@@ -1,6 +1,8 @@
+import { Sequelize } from "sequelize";
 import { InfraEvent } from "../model/infra-event.model";
+import { createEquipment } from "./equipment.repository";
 
-async function getInfraEventById(id: string): Promise<InfraEvent | null> {
+async function getInfraEventById(id: number): Promise<InfraEvent | null> {
   try {
     const infraEvent = await InfraEvent.findOne({
       where: { id },
@@ -12,10 +14,10 @@ async function getInfraEventById(id: string): Promise<InfraEvent | null> {
   }
 }
 
-async function getInfraEventByEventId(eventid: string): Promise<InfraEvent | null> {
+async function getInfraEventByOriginAndEventId(origin: string, eventid: string): Promise<InfraEvent | null> {
   try {
     const infraEvent = await InfraEvent.findOne({
-      where: { eventid },
+      where: { origin, eventid },
     });
     return infraEvent;
   } catch (error) {
@@ -23,9 +25,9 @@ async function getInfraEventByEventId(eventid: string): Promise<InfraEvent | nul
     throw error;
   }
 }
-async function getInfraEventByOrigin(origin: string): Promise<InfraEvent | null> {
+async function getAllInfraEventsByOrigin(origin: string): Promise<InfraEvent[] | null> {
   try {
-    const infraEvent = await InfraEvent.findOne({
+    const infraEvent = await InfraEvent.findAll({
       where: { origin },
     });
     return infraEvent;
@@ -43,28 +45,71 @@ async function getAllInfraEvents(): Promise<InfraEvent[]> {
     throw error;
   }
 }
-async function createInfraEvent(infraEventData: Partial<InfraEvent>): Promise<InfraEvent> {
+async function createInfraEvent(infraEventData: Partial<InfraEvent>, options?: any): Promise<InfraEvent | void> {
   try {
-    const infraEvent = await InfraEvent.create(infraEventData);
+    const infraEvent = await InfraEvent.create(infraEventData, options);
     return infraEvent;
   } catch (error) {
     console.error("Error creating InfraEvent:", error);
     throw error;
   }
 }
-async function updateInfraEvent(id: string, infraEventData: Partial<InfraEvent>): Promise<[number, InfraEvent[]]> {
+
+async function createInfraEventWithTransaction(infraEvent: InfraEvent, sequelize: Sequelize): Promise<InfraEvent | void> {
+  // Start a transaction
+  const transaction = await sequelize.transaction();
+
   try {
-    const [updatedRows, updatedInfraEvent] = await InfraEvent.update(infraEventData, {
+    // Save Equipment first
+    if (!infraEvent.equipment) {
+      throw new Error("Equipment data is undefined");
+    }
+
+    const savedEquipment = await createEquipment(infraEvent.equipment, { transaction });
+
+    if (!savedEquipment) {
+      throw new Error("Failed to save equipment");
+    }
+
+    if (!infraEvent) {
+      throw new Error("InfraEvent data is undefined");
+    }
+
+    if (!savedEquipment) {
+      throw new Error("Failed to save equipment");
+    }
+
+    infraEvent.equipmentId = savedEquipment.id; // Set the foreign key
+    infraEvent.equipment = savedEquipment; // Set the equipment object
+
+    const savedInfraEvent = await createInfraEvent(infraEvent, { transaction });
+
+    // Commit the transaction
+    await transaction.commit();
+
+    console.log("Transaction committed successfully.");
+    return savedInfraEvent;
+  } catch (error) {
+    // Rollback the transaction in case of an error
+    await transaction.rollback();
+    console.error("Transaction rolled back due to an error:", error);
+    throw error;
+  }
+}
+
+async function updateInfraEvent(id: number, infraEventData: Partial<InfraEvent>): Promise<[number]> {
+  try {
+    const [updatedRows] = await InfraEvent.update(infraEventData, {
       where: { id },
-      returning: true,
+      returning: false,
     });
-    return [updatedRows, updatedInfraEvent];
+    return [updatedRows];
   } catch (error) {
     console.error("Error updating InfraEvent:", error);
     throw error;
   }
 }
-async function deleteInfraEvent(id: string): Promise<number> {
+async function deleteInfraEvent(id: number): Promise<number> {
   try {
     const deletedRows = await InfraEvent.destroy({
       where: { id },
@@ -75,27 +120,16 @@ async function deleteInfraEvent(id: string): Promise<number> {
     throw error;
   }
 }
-async function getInfraEventByName(name: string): Promise<InfraEvent | null> {
-  try {
-    const infraEvent = await InfraEvent.findOne({
-      where: { name },
-    });
-    return infraEvent;
-  } catch (error) {
-    console.error("Error fetching InfraEvent by name:", error);
-    throw error;
-  }
-}
 
 export {
   getInfraEventById,
-    getInfraEventByEventId,
-    getInfraEventByOrigin,
+    getInfraEventByOriginAndEventId,
+    getAllInfraEventsByOrigin,
     getAllInfraEvents,
     createInfraEvent,
     updateInfraEvent,
     deleteInfraEvent,
-    getInfraEventByName,
+    createInfraEventWithTransaction,
     // Add any other functions you need for InfraEvent repository here
     // e.g., getInfraEventByStatus, getInfraEventBySeverity, etc.
 }

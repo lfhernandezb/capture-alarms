@@ -168,4 +168,4 @@ InfraEvent.init(
 InfraEvent.belongsTo(Equipment, { foreignKey: "equipmentId" });
 Equipment.hasMany(InfraEvent, { foreignKey: "equipmentId" });
 
-export { sequelize, InfraEvent, Equipment };
+export { InfraEvent, Equipment };

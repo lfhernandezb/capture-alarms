@@ -1,6 +1,6 @@
 import { Equipment } from "../model/infra-event.model";
 
-async function getEquipmentById(id: string): Promise<Equipment | null> {
+async function getEquipmentById(id: number): Promise<Equipment | null> {
   try {
     const equipment = await Equipment.findByPk(id);
     return equipment;
@@ -19,28 +19,28 @@ async function getAllEquipment(): Promise<Equipment[]> {
     throw error;
   }
 }
-async function createEquipment(equipmentData: Partial<Equipment>): Promise<Equipment> {
+async function createEquipment(equipmentData: Partial<Equipment>, options?: any): Promise<Equipment | void> {
   try {
-    const equipment = await Equipment.create(equipmentData);
+    const equipment = await Equipment.create(equipmentData, options);
     return equipment;
   } catch (error) {
     console.error("Error creating equipment:", error);
     throw error;
   }
 }
-async function updateEquipment(id: string, equipmentData: Partial<Equipment>): Promise<[number, Equipment[]]> {
+async function updateEquipment(id: number, equipmentData: Partial<Equipment>): Promise<[number]> {
   try {
-    const [updatedRows, updatedEquipment] = await Equipment.update(equipmentData, {
+    const [updatedRows] = await Equipment.update(equipmentData, {
       where: { id },
-      returning: true,
+      returning: false,
     });
-    return [updatedRows, updatedEquipment];
+    return [updatedRows];
   } catch (error) {
     console.error("Error updating equipment:", error);
     throw error;
   }
 }
-async function deleteEquipment(id: string): Promise<number> {
+async function deleteEquipment(id: number): Promise<number> {
   try {
     const deletedRows = await Equipment.destroy({
       where: { id },

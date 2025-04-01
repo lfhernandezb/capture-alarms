@@ -18,6 +18,7 @@ interface EnvConfig {
     timeout: number;
     zabbixUrl: string;
     zabbixToken: string;
+    nodeEnv: string;
 }
 
 
@@ -68,6 +69,9 @@ const getConfig = (): EnvConfig => {
     if (!process.env.ZABBIX_TOKEN) {
         throw new Error("Missing ZABBIX_TOKEN in .env");
     }
+    if (!process.env.NODE_ENV) {
+        throw new Error("Missing NODE_ENV in .env");
+    }
 
     return {
         dbUser: process.env.DB_USER,
@@ -84,6 +88,7 @@ const getConfig = (): EnvConfig => {
         timeout: parseInt(process.env.TIMEOUT ? process.env.TIMEOUT : "4000", 10),
         zabbixUrl: process.env.ZABBIX_URL ? process.env.ZABBIX_URL : "http://localhost:8082",
         zabbixToken: process.env.ZABBIX_TOKEN ? process.env.ZABBIX_TOKEN : "Zabbix-Token",
+        nodeEnv: process.env.NODE_ENV ? process.env.NODE_ENV : "development",
     };
   };
 

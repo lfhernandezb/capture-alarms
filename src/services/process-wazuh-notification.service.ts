@@ -8,7 +8,8 @@ import { DataOffice365 } from '../model/wazuh/data-office365.model';
 import { queryEventById } from './wazuh.service';
 import { InfraEvent, Equipment, wazuSeverities } from "../model/infra-event.model";
 import { createEquipment } from "../repositories/equipment.repository";
-import { createInfraEvent } from "../repositories/infra-event.repository";
+import { createInfraEvent, createInfraEventWithTransaction } from "../repositories/infra-event.repository";
+import { sequelize } from "../config/sequelize";
 
 export async function processWazuhNotification(notification: Notification): Promise<Notification> {
   
@@ -72,7 +73,7 @@ function toCamelCase(input: string): string {
     return input.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 }
 
-export async function parseWazuhAnswer(answer: WazuhAnswer): Promise<InfraEvent> {
+export async function parseWazuhAnswer(answer: WazuhAnswer): Promise<InfraEvent | void> {
     console.log("answer:");
     console.log(answer);
 
@@ -105,11 +106,21 @@ export async function parseWazuhAnswer(answer: WazuhAnswer): Promise<InfraEvent>
     console.log("agent.status:" + agent!.status);
     console.log("agent.version:" + agent!.version);
 
+    let equipment = {
+      id: undefined,
+      name: "",
+      type: "",
+      ip: "",
+      hostname: "",
+      os: "",
+      os_version: "",
+    } as unknown as Equipment;
+
     let infraEvent = {
       id: undefined,
       origin: "wazuh",
       eventid: source.id,
-      equipment: undefined,
+      equipment: equipment,
       description: rule!.description || "",
       status: "active",
       acknowledged: false,
@@ -128,15 +139,14 @@ export async function parseWazuhAnswer(answer: WazuhAnswer): Promise<InfraEvent>
               excludeExtraneousValues: false,
             });
             console.log(dataWin);
-            infraEvent.equipment = {
-                    id: undefined,
-                    name: dataWin.win?.eventdata!.workstationName || "",
-                    type: "PC",
-                    ip: dataWin.win?.eventdata!.ipAddress || "",
-                    hostname: dataWin.win?.eventdata!.workstationName || "",
-                    os: "Windows",
-                    os_version: "",
-            } as unknown as Equipment;
+
+            if (infraEvent && infraEvent.equipment) {
+              infraEvent.equipment.name = dataWin.win?.eventdata!.workstationName || "";
+              infraEvent.equipment.type = "PC";
+              infraEvent.equipment.ip = dataWin.win?.eventdata!.ipAddress || "";
+              infraEvent.equipment.hostname = dataWin.win?.eventdata!.workstationName || "";
+              infraEvent.equipment.os = "Windows";
+            }
 
             // console.log(infraEvent);
             // Save infraEvent to DB
@@ -149,15 +159,12 @@ export async function parseWazuhAnswer(answer: WazuhAnswer): Promise<InfraEvent>
               excludeExtraneousValues: false,
             });
             console.log(dataFw);
-            infraEvent.equipment = {
-                    id: undefined,
-                    name: dataFw.deviceName,
-                    type: dataFw.logType,
-                    ip: "",
-                    hostname: "",
-                    os: "",
-                    os_version: "",
-            } as unknown as Equipment;
+
+            if (infraEvent && infraEvent.equipment) {
+              infraEvent.equipment.name = dataFw.deviceName || "";
+              infraEvent.equipment.type = dataFw.logType || "";
+            }
+
             // console.log(infraEvent);
             // Save infraEvent to DB
             // await this.eventRepository.save(infraEvent);
@@ -167,16 +174,14 @@ export async function parseWazuhAnswer(answer: WazuhAnswer): Promise<InfraEvent>
             const dataPkg = plainToInstance(DataPkg, JSON.parse(JSON.stringify(data)), {
               excludeExtraneousValues: false,
             });
-            infraEvent.equipment = {
-                  id: undefined,
-                  name: agent?.name,
-                  type: "Linux",
-                  ip: agent?.ip,
-                  hostname: agent?.name,
-                  os: "",
-                  os_version: "",
-              } as unknown as Equipment;
-          // console.log(infraEvent);
+
+            if (infraEvent && infraEvent.equipment) {
+              infraEvent.equipment.name = agent?.name || "";
+              infraEvent.equipment.type = "Linux";
+              infraEvent.equipment.ip = agent?.ip || "";
+              infraEvent.equipment.hostname = agent?.name || "";
+            }
+            // console.log(infraEvent);
             // Save infraEvent to DB
             // await this.eventRepository.save(infraEvent);
             break;
@@ -189,36 +194,27 @@ export async function parseWazuhAnswer(answer: WazuhAnswer): Promise<InfraEvent>
         case "750":
         case "31516":
               // related to servers, web servers, services, full_log
-              console.log(fullLog);
-              infraEvent.equipment = {
-                    id: undefined,
-                    name: agent?.name,
-                    type: "",
-                    ip: agent?.ip,
-                    hostname: agent?.name,
-                    os: "",
-                    os_version: "",
-                } as unknown as Equipment;
-            // console.log(infraEvent);
-            // Save infraEvent to DB
-            // await this.eventRepository.save(infraEvent);
+              // console.log(fullLog);
+              if (infraEvent && infraEvent.equipment) {
+                infraEvent.equipment.name = agent?.name || "";
+                infraEvent.equipment.ip = agent?.ip || "";
+                infraEvent.equipment.hostname = agent?.name || "";
+              }
+  
+              // console.log(infraEvent);
+              // Save infraEvent to DB
+              // await this.eventRepository.save(infraEvent);
               break;
         case "91575":
             // office365
             const dataOffice365 = plainToInstance(DataOffice365, JSON.parse(JSON.stringify(data)), {
                         excludeExtraneousValues: false,
                     });
-            console.log(dataOffice365);
-            infraEvent.equipment = {
-                  id: undefined,
-                  name: "",
-                  type: "",
-                  ip: "",
-                  hostname: "",
-                  os: "",
-                  os_version: "",
-              } as unknown as Equipment;
-          // console.log(infraEvent);
+            // console.log(dataOffice365);
+
+            // nothing to do with equipment **********
+
+            // console.log(infraEvent);
             // Save infraEvent to DB using sequelize
             // await this.eventRepository.save(infraEvent);            
             break;
@@ -231,43 +227,26 @@ export async function parseWazuhAnswer(answer: WazuhAnswer): Promise<InfraEvent>
     console.log(infraEvent);
     // Save the InfraEvent and Equipment to the database
     try {
+      /*
       // Save Equipment first
       if (!infraEvent.equipment) {
           throw new Error("Equipment data is undefined");
       }
       const savedEquipment = await createEquipment(infraEvent.equipment);
-      /*
-      const equipment = await Equipment.upsert({
-          id: infraEvent.equipment!.id,
-          name: infraEvent.equipment!.name,
-          type: infraEvent.equipment!.type,
-          ip: infraEvent.equipment!.ip,
-          hostname: infraEvent.equipment!.hostname,
-          os: infraEvent.equipment!.os,
-          os_version: infraEvent.equipment!.os_version,
-      });
-      */
-      console.log("Equipment saved to database:", savedEquipment.toJSON());
+
+      console.log("Equipment saved to database:", savedEquipment);
       // Save InfraEvent
-      infraEvent.equipmentId = savedEquipment.id; // Set the foreign key
+      if (savedEquipment) {
+          infraEvent.equipmentId = savedEquipment.id; // Set the foreign key
+      } else {
+          throw new Error("Failed to save equipment: Equipment is undefined");
+      }
       infraEvent.equipment = savedEquipment; // Set the equipment object
       // Save InfraEvent
       const savedInfraEvent = await createInfraEvent(infraEvent);
-      /*
-      const savedInfraEvent = await InfraEvent.create({
-          id: infraEvent.id,
-          origin: infraEvent.origin,
-          eventid: infraEvent.eventid,
-          equipmentId: infraEvent.equipment!.id, // Foreign key
-          description: infraEvent.description,
-          status: infraEvent.status,
-          acknowledged: infraEvent.acknowledged,
-          severity: infraEvent.severity,
-          timestamp: infraEvent.timestamp,
-          detail: infraEvent.detail,
-      });
       */
-      console.log("InfraEvent saved to database:", savedInfraEvent.toJSON());
+      const savedInfraEvent = await createInfraEventWithTransaction(infraEvent, sequelize);
+      console.log("InfraEvent saved to database:", savedInfraEvent);
       return savedInfraEvent;
     } catch (error) {
         console.error("Error saving InfraEvent to database:", error);

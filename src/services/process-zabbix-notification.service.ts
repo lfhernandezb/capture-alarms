@@ -2,8 +2,9 @@ import { plainToInstance } from "class-transformer";
 import { ZabbixAnswer } from "../model/zabbix/zabbix-answer.model";
 import { queryEventById, queryHostByTriggerId } from "./zabbix.service";
 import { InfraEvent, zabbixSeverities } from "../model/infra-event.model";
-import { createInfraEvent } from "../repositories/infra-event.repository";
+import { createInfraEvent, createInfraEventWithTransaction } from "../repositories/infra-event.repository";
 import { createEquipment } from "../repositories/equipment.repository";
+import { sequelize } from "../config/sequelize";
 
 
   export async function processZabbixNotification(notification: string): Promise<string> {
@@ -61,7 +62,7 @@ import { createEquipment } from "../repositories/equipment.repository";
       return input.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
   }
   
-  async function parseZabbixAnswer(zabbixAnswer: ZabbixAnswer): Promise<InfraEvent> {
+  async function parseZabbixAnswer(zabbixAnswer: ZabbixAnswer): Promise<InfraEvent | void> {
     // const alertArray: Alert[] = [];
 
     let infraEvent: InfraEvent = {
@@ -158,46 +159,28 @@ import { createEquipment } from "../repositories/equipment.repository";
 
                         // Save the InfraEvent and Equipment to the database
                         try {
+                          /*
                           // Save Equipment first
                           if (!infraEvent.equipment) {
                               throw new Error("Equipment data is undefined");
                           }
                           const savedEquipment = await createEquipment(infraEvent.equipment);
-                          /*
-                          const equipment = await Equipment.upsert({
-                              id: infraEvent.equipment!.id,
-                              name: infraEvent.equipment!.name,
-                              type: infraEvent.equipment!.type,
-                              ip: infraEvent.equipment!.ip,
-                              hostname: infraEvent.equipment!.hostname,
-                              os: infraEvent.equipment!.os,
-                              os_version: infraEvent.equipment!.os_version,
-                          });
-                          */
-                          console.log("Equipment saved to database:", savedEquipment.toJSON());
+                          console.log("Equipment saved to database:", savedEquipment);
                           // Save InfraEvent
                           if (!infraEvent) {
                               throw new Error("InfraEvent data is undefined");
                           }
-                          infraEvent.equipmentId = savedEquipment.id; // Set the foreign key
+                          if (savedEquipment && 'id' in savedEquipment) {
+                              infraEvent.equipmentId = savedEquipment.id; // Set the foreign key
+                          } else {
+                              throw new Error("Failed to save equipment or equipment ID is undefined");
+                          }
                           infraEvent.equipment = savedEquipment; // Set the equipment object
                           // Save InfraEvent with the foreign key
                           const savedInfraEvent = await createInfraEvent(infraEvent);
-                          /*
-                          const savedInfraEvent = await InfraEvent.create({
-                              id: infraEvent.id,
-                              origin: infraEvent.origin,
-                              eventid: infraEvent.eventid,
-                              equipmentId: infraEvent.equipment!.id, // Foreign key
-                              description: infraEvent.description,
-                              status: infraEvent.status,
-                              acknowledged: infraEvent.acknowledged,
-                              severity: infraEvent.severity,
-                              timestamp: infraEvent.timestamp,
-                              detail: infraEvent.detail,
-                          });
                           */
-                          console.log("InfraEvent saved to database:", savedInfraEvent.toJSON());
+                          const savedInfraEvent = await createInfraEventWithTransaction(infraEvent, sequelize);
+                          console.log("InfraEvent saved to database:", savedInfraEvent);
                           return savedInfraEvent;
                         } catch (error) {
                             console.error("Error saving InfraEvent to database:", error);

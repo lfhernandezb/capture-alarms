@@ -11,8 +11,8 @@ class NotificationRoutes {
 
   intializeRoutes() {
     this.router.get("/", welcome);
-    this.router.post("/alert/wazuh", receiveWazuhAlert);
-    this.router.post("/alert/zabbix", receiveZabbixAlert);
+    this.router.post("/wazuh", receiveWazuhAlert);
+    this.router.post("/zabbix", receiveZabbixAlert);
   }
 }
 
