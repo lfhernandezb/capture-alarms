@@ -4,8 +4,8 @@ import { config } from "./config";
 // Initialize Sequelize for a local SQLite database
 const sequelize = config.nodeEnv === "development"
   ? new Sequelize({
-    dialect: "sqlite",
-    storage: "./database.sqlite", // Path to the SQLite database file
+    dialect: (config.dbDialect as "sqlite" | "postgres" | "mysql" | "mariadb" | "mssql") || "sqlite",
+    storage: config.dbStorage || "./database.sqlite", // Path to the SQLite database file
     logging: true, // Disable logging (optional)
   })
   : new Sequelize(

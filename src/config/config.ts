@@ -19,6 +19,8 @@ interface EnvConfig {
     zabbixUrl: string;
     zabbixToken: string;
     nodeEnv: string;
+    dbDialect: string; // e.g., 'postgres', 'mysql', 'sqlite'
+    dbStorage?: string; // Optional for SQLite
 }
 
 
@@ -89,6 +91,8 @@ const getConfig = (): EnvConfig => {
         zabbixUrl: process.env.ZABBIX_URL ? process.env.ZABBIX_URL : "http://localhost:8082",
         zabbixToken: process.env.ZABBIX_TOKEN ? process.env.ZABBIX_TOKEN : "Zabbix-Token",
         nodeEnv: process.env.NODE_ENV ? process.env.NODE_ENV : "development",
+        dbDialect: process.env.DB_DIALECT ? process.env.DB_DIALECT : "sqlite",
+        dbStorage: process.env.DB_STORAGE ? process.env.DB_STORAGE : "./db.sqlite", // Optional for SQLite
     };
   };
 

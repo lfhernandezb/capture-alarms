@@ -45,11 +45,13 @@ async function getAllEvents(): Promise<any[]> {
 
     return infraEvents;
 }
+
 async function createEvent(eventData: Partial<InfraEvent>): Promise<any> {
 // we use the InfraEvent repository to create the event
     const infraEvent = await createInfraEvent(eventData);
     return infraEvent;
 }
+
 async function updateEvent(eventId: number, eventData: Partial<InfraEvent>): Promise<any> {
 // we use the InfraEvent repository to update the event
     const updatedEvent = await updateInfraEvent(eventId, eventData);

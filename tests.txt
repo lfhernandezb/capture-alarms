@@ -1,13 +1,32 @@
+# notificaciones zabbix
+
 curl -i -X POST http://localhost:8080/api/alert/zabbix/ \
 -H "Content-Type: application/json" \
 -d "{\"Problem started at 14:35:00 on 2025.03.13 Problem name: MSSQL: Too many physical reads occurring Host: ubuntutest Severity: Warning Operational data: 0.11641581447693426, 0.11641581447693426 Original problem ID: 15415\": \"\"}"
 
+curl -i -X POST http://localhost:8080/api/alert/zabbix/ \
+-H "Content-Type: application/json" \
+-d "{\"Problem started at 12:43:03 on 2025.03.13 Problem name: MSSQL: Number of index and table scans exceeds index searches in the last 15m Host: ubuntutest Severity: Warning Operational data: 0.033112582781456956 Original problem ID: 15063 \": \"\"}"
 
+curl -i -X POST http://localhost:8080/api/alert/zabbix/ \
+-H "Content-Type: application/json" \
+-d "{\"Problem started at 12:43:55 on 2025.03.13 Problem name: Linux: Number of installed packages has been changed Host: Zabbix_server Severity: Warning Operational data: 809 Original problem ID: 15070 \": \"\"}"
+
+curl -i -X POST http://localhost:8080/api/alert/zabbix/ \
+-H "Content-Type: application/json" \
+-d "{ \"Problem started at 14:34:00 on 2025.03.13 Problem name: MSSQL: Too many physical reads occurring Host: ubuntutest Severity: Warning Operational data: 0.91288808145060607, 1.3186161176508753 Original problem ID: 15409 \": \"\"}"
+
+
+
+
+# notificaciones wazuh
 
 curl -i -X POST http://localhost:8080/api/alert/wazuh/ \
 -H "Content-Type: application/json" \
 -d '{"attachments": [{"color": "warning", "pretext": "WAZUH Alert", "title": "Suspicious URL access.", "text": "127.0.0.1 - - [27/Mar/2025:17:39:38 -0300] \"GET /server-status?auto HTTP/1.1\" 200 1027 \"-\" \"Zabbix 5.4.5\"", "fields": [], "ts": "1743107979.1310746420" }]}'
 
+
+# request de infra-eventos
 
 curl -i -X GET http://localhost:8080/api/event/all
 
