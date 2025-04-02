@@ -49,9 +49,10 @@ async function runMigrations() {
       },
       { sequelize, tableName: "infra_events" }
   );
+
   // Define associations
-  InfraEvent.belongsTo(Equipment, { foreignKey: { name: "equipmentId", allowNull: true }, as: "Equipment" });
-  Equipment.hasMany(InfraEvent, { foreignKey: "equipmentId" });
+  InfraEvent.belongsTo(Equipment, { foreignKey: { name: "equipmentId", allowNull: false }, as: "equipment" });
+  Equipment.hasMany(InfraEvent, { foreignKey: "equipmentId", as: "infraEvents" });
 
   // Set up Umzug for migrations
   const umzug = new Umzug({

@@ -11,6 +11,7 @@ export async function fetchEventById(req: Request, res: Response) {
   const event = await getEventById(Number(id));
 
   if (event) {
+    console.log("Event in controller:", event);
     res.status(200).json(event);
   }
   else {

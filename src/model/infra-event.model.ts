@@ -45,7 +45,7 @@ class Equipment extends Model {
   public os?: string;
   public os_version?: string;
 }
-
+/*
 Equipment.init(
   {
     id: {
@@ -84,7 +84,7 @@ Equipment.init(
     tableName: "equipment",
   }
 );
-
+*/
 // Define the InfraEvent model
 class InfraEvent extends Model {
   public id?: number;
@@ -98,14 +98,14 @@ class InfraEvent extends Model {
   public timestamp?: Date;
   public detail?: string;
 
-    // Add the Equipment association
-    equipment?: Equipment;
+  // Add the Equipment association
+  public equipment?: Equipment;
 
     static associations: {
       equipment: Association<InfraEvent, Equipment>;
     };
 }
-
+/*
 InfraEvent.init(
   {
     id: {
@@ -165,7 +165,8 @@ InfraEvent.init(
 );
 
 // Define associations
-InfraEvent.belongsTo(Equipment, { foreignKey: "equipmentId" });
-Equipment.hasMany(InfraEvent, { foreignKey: "equipmentId" });
+InfraEvent.belongsTo(Equipment, { foreignKey: "equipmentId", as: "equipment" });
+Equipment.hasMany(InfraEvent, { foreignKey: "equipmentId", as: "infraEvents" });
+*/
 
 export { InfraEvent, Equipment };

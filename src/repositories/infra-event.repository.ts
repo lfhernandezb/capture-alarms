@@ -1,12 +1,21 @@
 import { Sequelize } from "sequelize";
-import { InfraEvent } from "../model/infra-event.model";
-import { createEquipment } from "./equipment.repository";
+import { Equipment, InfraEvent } from "../model/infra-event.model";
+import { createEquipment, getEquipmentById } from "./equipment.repository";
 
 async function getInfraEventById(id: number): Promise<InfraEvent | null> {
   try {
     const infraEvent = await InfraEvent.findOne({
       where: { id },
+      include: [{ model: Equipment, as: "equipment" }], // Include the associated equipment data if it exists
     });
+    /*
+    // Include the associated equipment data if it exists
+    if (infraEvent && infraEvent.equipmentId) {
+      const equipment = await getEquipmentById(infraEvent.equipmentId); // Assuming you have a method to get the associated equipment
+      infraEvent.equipment = equipment ?? undefined; // Set the equipment object in the InfraEvent instance
+      console.log("Equipment data included in InfraEvent:", infraEvent.equipment);
+    }
+    */
     return infraEvent;
   } catch (error) {
     console.error("Error fetching InfraEvent by ID:", error);
@@ -18,6 +27,7 @@ async function getInfraEventByOriginAndEventId(origin: string, eventid: string):
   try {
     const infraEvent = await InfraEvent.findOne({
       where: { origin, eventid },
+      include: [{ model: Equipment, as: "equipment" }], // Include the associated equipment data if it exists
     });
     return infraEvent;
   } catch (error) {
@@ -29,6 +39,7 @@ async function getAllInfraEventsByOrigin(origin: string): Promise<InfraEvent[] |
   try {
     const infraEvent = await InfraEvent.findAll({
       where: { origin },
+      include: [{ model: Equipment, as: "equipment" }], // Include the associated equipment data if it exists
     });
     return infraEvent;
   } catch (error) {
@@ -38,7 +49,20 @@ async function getAllInfraEventsByOrigin(origin: string): Promise<InfraEvent[] |
 }
 async function getAllInfraEvents(): Promise<InfraEvent[]> {
   try {
-    const infraEvents = await InfraEvent.findAll();
+    const infraEvents = await InfraEvent.findAll(
+      {
+        include: [{ model: Equipment, as: "equipment" }], // Include the associated equipment data if it exists
+      }
+    );
+    /*
+    // iterate over the infraEvents and include the equipment data
+    for (const infraEvent of infraEvents) {
+      if (infraEvent.equipmentId) {
+        const equipment = await getEquipmentById(infraEvent.equipmentId); // Assuming you have a method to get the associated equipment
+        infraEvent.equipment = equipment ?? undefined; // Set the equipment object in the InfraEvent instance
+      }
+    }
+    */
     return infraEvents;
   } catch (error) {
     console.error("Error fetching all InfraEvents:", error);

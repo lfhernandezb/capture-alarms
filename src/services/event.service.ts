@@ -11,6 +11,16 @@ async function getEventById(eventId: number): Promise<any> {
     if (!infraEvent) {
         throw new Error("Event not found");
     }
+    console.log("Event found:", infraEvent);
+    // Check if the event has an associated equipment
+    if (infraEvent.equipment) {
+        //const equipment = await getEquipment(); // Assuming you have a method to get the associated equipment
+        //infraEvent.equipment = equipment ?? undefined; // Set the equipment object in the InfraEvent instance
+        console.log("Equipment data included in InfraEvent:", infraEvent.equipment);
+    }
+    // Return the InfraEvent instance with the associated equipment
+    console.log("InfraEvent with associated equipment:", infraEvent);
+    // Return the InfraEvent instance with the associated equipment
     return infraEvent;
 }
 async function getEventByOriginAndEventId(origin: string, eventId: string): Promise<any> {
