@@ -18,12 +18,31 @@ curl -i -X POST http://localhost:8080/api/alert/zabbix/ \
 
 
 
-
 # notificaciones wazuh
 
 curl -i -X POST http://localhost:8080/api/alert/wazuh/ \
 -H "Content-Type: application/json" \
 -d '{"attachments": [{"color": "warning", "pretext": "WAZUH Alert", "title": "Suspicious URL access.", "text": "127.0.0.1 - - [27/Mar/2025:17:39:38 -0300] \"GET /server-status?auto HTTP/1.1\" 200 1027 \"-\" \"Zabbix 5.4.5\"", "fields": [], "ts": "1743107979.1310746420" }]}'
+
+
+curl -i -X POST http://localhost:8080/api/alert/wazuh/ \
+-H "Content-Type: application/json" \
+-d '{"attachments": [{"color": "warning", "pretext": "WAZUH Alert", "title": "Suspicious URL access.", "text": "127.0.0.1 - - [27/Mar/2025:17:39:38 -0300] \"GET /server-status?auto HTTP/1.1\" 200 1027 \"-\" \"Zabbix 5.4.5\"", "fields": [], "ts": "1743191694.1187038442" }]}'
+
+
+curl -i -X POST http://localhost:8080/api/alert/wazuh/ \
+-H "Content-Type: application/json" \
+-d '{"attachments": [{"color": "warning", "pretext": "WAZUH Alert", "title": "Suspicious URL access.", "text": "127.0.0.1 - - [27/Mar/2025:17:39:38 -0300] \"GET /server-status?auto HTTP/1.1\" 200 1027 \"-\" \"Zabbix 5.4.5\"", "fields": [], "ts": "1743191734.1187941478" }]}'
+
+
+curl -i -X POST http://localhost:8080/api/alert/wazuh/ \
+-H "Content-Type: application/json" \
+-d '{"attachments": [{"color": "warning", "pretext": "WAZUH Alert", "title": "Suspicious URL access.", "text": "127.0.0.1 - - [27/Mar/2025:17:39:38 -0300] \"GET /server-status?auto HTTP/1.1\" 200 1027 \"-\" \"Zabbix 5.4.5\"", "fields": [], "ts": "1743191411.1180395926" }]}'
+
+
+curl -i -X POST http://localhost:8080/api/alert/wazuh/ \
+-H "Content-Type: application/json" \
+-d '{"attachments": [{"color": "warning", "pretext": "WAZUH Alert", "title": "Suspicious URL access.", "text": "127.0.0.1 - - [27/Mar/2025:17:39:38 -0300] \"GET /server-status?auto HTTP/1.1\" 200 1027 \"-\" \"Zabbix 5.4.5\"", "fields": [], "ts": "1743191097.1171798364" }]}'
 
 
 # request de infra-eventos
